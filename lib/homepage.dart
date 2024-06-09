@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'firebase_helper.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -10,12 +10,9 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _diaries = [];
   bool _isLoading = true;
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  bool _isListening = false;
-  String _text = '';
 
   @override
   void initState() {
@@ -31,98 +28,29 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  final TextEditingController _feelingController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-
-  void _showForm(String? id) async {
+  void _navigateToAddEditPage({String? id}) {
     if (id != null) {
       final existingDiary = _diaries.firstWhere((element) => element['id'] == id);
-      _feelingController.text = existingDiary['feeling'];
-      _descriptionController.text = existingDiary['description'];
-    } else {
-      _feelingController.clear();
-      _descriptionController.clear();
-    }
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(id == null ? 'Create New Entry' : 'Update Entry'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: _feelingController,
-                decoration: const InputDecoration(hintText: 'Feeling'),
-              ),
-              const SizedBox(height: 10),
-              Stack(
-                alignment: Alignment.centerRight,
-                children: [
-                  TextField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(hintText: 'Description'),
-                  ),
-                  if (_isListening)
-                    Positioned(
-                      right: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: AnimatedTextKit(
-                          animatedTexts: [
-                            WavyAnimatedText('Listening...',
-                                textStyle: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.red,
-                                )),
-                          ],
-                          isRepeatingAnimation: true,
-                          repeatForever: true,
-                        ),
-                      ),
-                    ),
-                  IconButton(
-                    icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-                    onPressed: _listen,
-                  ),
-                ],
-              ),
-            ],
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddEditPage(
+            id: id,
+            existingDiary: existingDiary,
+            refreshDiaries: _refreshDiaries,
           ),
         ),
-        actions: [
-          ElevatedButton(
-            onPressed: () async {
-              if (id == null) {
-                await _addDiary();
-              } else {
-                await _updateDiary(id);
-              }
-              Navigator.of(context).pop();
-            },
-            child: Text(id == null ? 'Create' : 'Update'),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddEditPage(
+            refreshDiaries: _refreshDiaries,
           ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _addDiary() async {
-    await FirebaseHelper.createDiary(
-      _feelingController.text, 
-      _descriptionController.text,
-    );
-    _refreshDiaries();
-  }
-
-  Future<void> _updateDiary(String id) async {
-    await FirebaseHelper.updateDiary(
-      id, 
-      _feelingController.text, 
-      _descriptionController.text,
-    );
-    _refreshDiaries();
+        ),
+      );
+    }
   }
 
   void _deleteDiary(String id) async {
@@ -131,6 +59,169 @@ class _HomePageState extends State<HomePage> {
       content: Text('Successfully deleted a diary!'),
     ));
     _refreshDiaries();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
+      appBar: AppBar(
+        title: Image.asset("assets/memolia_name.png", height: 300, width: 300,),
+        centerTitle: true,
+        backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          _refreshDiaries();
+        },
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'Welcome, User',
+                      textAlign: TextAlign.left,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _diaries.length,
+                      itemBuilder: (context, index) {
+                        final diary = _diaries[index];
+                        return Card(
+                          margin: const EdgeInsets.all(10),
+                          child: ListTile(
+                            leading: Icon(Icons.book),
+                            title: Text(diary['feeling']),
+                            subtitle: Text(diary['description']),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () => _navigateToAddEditPage(id: diary['id']),
+                            ),
+                            onLongPress: () => _navigateToAddEditPage(id: diary['id']),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateToAddEditPage(),
+        child: Icon(Icons.add),
+        backgroundColor: const Color.fromARGB(255, 39, 60, 176),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        elevation: 0,
+        color: Colors.transparent,
+        child: Container(
+          height: 60,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 135, 180, 219),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(30), bottom: Radius.circular(30)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                IconButton(
+                  icon: Icon(Icons.home),
+                  color: const Color.fromRGBO(14, 14, 37, 1),
+                  onPressed: () {
+                    // Handle Home button press
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.calendar_today),
+                  color: const Color.fromRGBO(14, 14, 37, 1),
+                  onPressed: () {
+                    // Handle Calendar button press
+                  },
+                ),
+                SizedBox(width: 48), // The dummy child
+                IconButton(
+                  icon: Icon(Icons.people_alt_rounded),
+                  color: const Color.fromRGBO(14, 14, 37, 1),
+                  onPressed: () {
+                    // Handle People button press
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.settings),
+                  color: const Color.fromRGBO(14, 14, 37, 1),
+                  onPressed: () {
+                    // Handle Settings button press
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AddEditPage extends StatefulWidget {
+  final String? id;
+  final Map<String, dynamic>? existingDiary;
+  final VoidCallback refreshDiaries;
+
+  AddEditPage({this.id, this.existingDiary, required this.refreshDiaries});
+
+  @override
+  _AddEditPageState createState() => _AddEditPageState();
+}
+
+class _AddEditPageState extends State<AddEditPage> {
+  final TextEditingController _descriptionController = TextEditingController();
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+  String _selectedFeeling = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingDiary != null) {
+      _selectedFeeling = widget.existingDiary!['feeling'];
+      _descriptionController.text = widget.existingDiary!['description'];
+    }
+  }
+
+  Future<void> _addDiary() async {
+    await FirebaseHelper.createDiary(
+      _selectedFeeling, 
+      _descriptionController.text,
+    );
+    widget.refreshDiaries();
+  }
+
+  Future<void> _updateDiary(String id) async {
+    await FirebaseHelper.updateDiary(
+      id, 
+      _selectedFeeling, 
+      _descriptionController.text,
+    );
+    widget.refreshDiaries();
   }
 
   void _listen() async {
@@ -154,44 +245,130 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _showFeelingIcons() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Select a Feeling'),
+        content: GridView.builder(
+          shrinkWrap: true,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemCount: _feelings.length,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedFeeling = _feelings[index]['feeling']!;
+                });
+                Navigator.of(context).pop();
+              },
+              child: Column(
+                children: [
+                  Image.asset(
+                    _feelings[index]['gif']!,
+                    width: 50,
+                    height: 50,
+                  ).animate(),
+                  Text(_feelings[index]['feeling']!),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Emotion Tracker'),
+        title: Text(widget.id == null ? 'Add Mood Log' : 'Edit Mood Log'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          _refreshDiaries();
-        },
-        child: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              itemCount: _diaries.length,
-              itemBuilder: (context, index) {
-                final diary = _diaries[index];
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: ListTile(
-                    leading: Icon(Icons.book),
-                    title: Text(diary['feeling']),
-                    subtitle: Text(diary['description']),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _showForm(diary['id']),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("How Are You Feeling?"),
+              SizedBox(height: 20),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: _feelings.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedFeeling = _feelings[index]['feeling']!;
+                      });
+                    },
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          _feelings[index]['gif']!,
+                          width: 50,
+                          height: 50,
+                        ).animate(),
+                        Text(_feelings[index]['feeling']!),
+                      ],
                     ),
-                    onLongPress: () => _showForm(diary['id']),
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              GestureDetector(
+                onTap: () => (){},
+                child: AbsorbPointer(
+                  child: TextField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      hintText: 'Description',
+                      suffixIcon: IconButton(
+                        icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                        onPressed: _listen,
+                      ),
+                    ),
                   ),
-                );
-              },
-            ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () => _showForm(null),
+                ),
+              ),
+              const SizedBox(height: 50),
+              ElevatedButton(
+                onPressed: () async {
+                  if (widget.id == null) {
+                    await _addDiary();
+                  } else {
+                    await _updateDiary(widget.id!);
+                  }
+                  Navigator.of(context).pop();
+                },
+                child: Text(widget.id == null ? 'Add Mood Log' : 'Update Mood Log'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
+
+const List<Map<String, String>> _feelings = [
+  {'feeling': 'Happy', 'gif': 'assets/happy.gif'},
+  {'feeling': 'Loved', 'gif': 'assets/loved.gif'},
+  {'feeling': 'Excited', 'gif': 'assets/excited.gif'},
+  {'feeling': 'Sad', 'gif': 'assets/sad.gif'},
+  {'feeling': 'Tired', 'gif': 'assets/tired.gif'},
+  {'feeling': 'Angry', 'gif': 'assets/angry.gif'},
+  {'feeling': 'Annoyed', 'gif': 'assets/annoyed.gif'},
+  {'feeling': 'Other', 'gif': 'assets/unknown.gif'}
+];
