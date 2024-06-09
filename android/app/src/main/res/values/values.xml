@@ -1,0 +1,9 @@
+<resources>
+    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID</string>
+    <string name="firebase_database_url">YOUR_DATABASE_URL</string>
+    <string name="gcm_defaultSenderId">911904224271</string>
+    <string name="google_api_key">AIzaSyDtCJI7IeJX68Rwmy3A5D_xTyg4USq1Afo</string>
+    <string name="google_app_id">1:911904224271:android:f7c0a791def88c85209f7a</string>
+    <string name="google_crash_reporting_api_key">YOUR_CRASH_REPORTING_API_KEY</string>
+    <string name="project_id">memolia-c698c</string>
+</resources>

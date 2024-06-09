@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "911904224271",
+    "project_id": "memolia-c698c",
+    "storage_bucket": "memolia-c698c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:911904224271:android:f7c0a791def88c85209f7a",
+        "android_client_info": {
+          "package_name": "com.example.memolia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtCJI7IeJX68Rwmy3A5D_xTyg4USq1Afo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
