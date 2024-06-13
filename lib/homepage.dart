@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'firebase_helper.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -23,15 +24,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void _refreshDiaries() async {
   final data = await FirebaseHelper.getDiaries();
   setState(() {
-    _diaries = data;
+    _diaries = data.map((diary) {
+      if (diary['createdAt'] is String) {
+        return {
+          ...diary,
+          'createdAt': DateTime.parse(diary['createdAt']),
+        };
+      } else {
+        return diary;
+      }
+    }).toList();
 
-    // Sort diaries by index in descending order
-    _diaries.sort((a, b) => _diaries.indexOf(b).compareTo(_diaries.indexOf(a)));
+    // Sort diaries by time and date created
+    _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
 
     _isLoading = false;
   });
 }
 
+  String formatDateTime(DateTime dateTime) {
+    final DateFormat formatter = DateFormat('dd MMM yy | HH:mm');
+    return formatter.format(dateTime);
+  }
 
   void _navigateToAddEditPage({String? id}) {
     if (id != null) {
@@ -85,14 +99,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         )
             : Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
+            SizedBox(height: 20,),
+            Text(
                 'Welcome, User',
                 textAlign: TextAlign.left,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-            ),
+            Text(
+              "How are you feeling today?",
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color.fromRGBO(243, 167, 18, 1)),
+              ),
+            SizedBox(height: 50,),
             Expanded(
               child: ListView.builder(
                 itemCount: _diaries.length,
@@ -100,29 +117,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   final diary = _diaries[index];
                   return Card(
                     margin: const EdgeInsets.all(10),
-                    child: ListTile(
-                      leading: Icon(Icons.book),
-                      title: Text(diary['feeling']),
-                      subtitle: Text(diary['description']),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _navigateToAddEditPage(id: diary['id']),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Icon(Icons.book),
+                              Text(
+                                formatDateTime(diary['createdAt']),
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            diary['feeling'],
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            diary['description'].length > 50
+                                ? '${diary['description'].substring(0, 50)}...'
+                                : diary['description'],
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
                       ),
-                      onLongPress: () => _navigateToAddEditPage(id: diary['id']),
                     ),
                   );
                 },
               ),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToAddEditPage(),
-        child: Icon(Icons.add),
-        backgroundColor: const Color.fromARGB(255, 39, 60, 176),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -135,7 +164,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           height: 60,
           child: Container(
             decoration: BoxDecoration(
-              color: Color.fromARGB(255, 135, 180, 219),
+              color: Color.fromRGBO(243, 167, 18, 1),
               borderRadius: BorderRadius.vertical(top: Radius.circular(30), bottom: Radius.circular(30)),
               boxShadow: [
                 BoxShadow(
@@ -156,13 +185,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.calendar_today),
+                  icon: Icon(Icons.add_circle_outline_rounded),
+                  iconSize: 28,
                   color: const Color.fromRGBO(14, 14, 37, 1),
                   onPressed: () {
-                    // Handle Calendar button press
+                    _navigateToAddEditPage();
                   },
                 ),
-                SizedBox(width: 48), // The dummy child
                 IconButton(
                   icon: Icon(Icons.people_alt_rounded),
                   color: const Color.fromRGBO(14, 14, 37, 1),

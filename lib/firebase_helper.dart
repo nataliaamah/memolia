@@ -12,12 +12,12 @@ class FirebaseHelper {
   }
 
   static Future<List<Map<String, dynamic>>> getDiaries() async {
-    QuerySnapshot querySnapshot = await _db.collection('diaries').orderBy('createdAt').get();
+    QuerySnapshot querySnapshot = await _db.collection('diaries').orderBy('createdAt', descending: true).get(); // Sort by createdAt in descending order
     return querySnapshot.docs.map((doc) => {
       'id': doc.id,
       'feeling': doc['feeling'],
       'description': doc['description'],
-      'createdAt': doc['createdAt'],
+      'createdAt': doc['createdAt'].toDate(), // Convert Timestamp to DateTime
     }).toList();
   }
 
