@@ -21,12 +21,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _refreshDiaries() async {
-    final data = await FirebaseHelper.getDiaries();
-    setState(() {
-      _diaries = data;
-      _isLoading = false;
-    });
-  }
+  final data = await FirebaseHelper.getDiaries();
+  setState(() {
+    _diaries = data;
+
+    // Sort diaries by index in descending order
+    _diaries.sort((a, b) => _diaries.indexOf(b).compareTo(_diaries.indexOf(a)));
+
+    _isLoading = false;
+  });
+}
+
 
   void _navigateToAddEditPage({String? id}) {
     if (id != null) {
@@ -76,41 +81,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         },
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(),
-              )
+          child: CircularProgressIndicator(),
+        )
             : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Welcome, User',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _diaries.length,
-                      itemBuilder: (context, index) {
-                        final diary = _diaries[index];
-                        return Card(
-                          margin: const EdgeInsets.all(10),
-                          child: ListTile(
-                            leading: Icon(Icons.book),
-                            title: Text(diary['feeling']),
-                            subtitle: Text(diary['description']),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _navigateToAddEditPage(id: diary['id']),
-                            ),
-                            onLongPress: () => _navigateToAddEditPage(id: diary['id']),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Welcome, User',
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _diaries.length,
+                itemBuilder: (context, index) {
+                  final diary = _diaries[index];
+                  return Card(
+                    margin: const EdgeInsets.all(10),
+                    child: ListTile(
+                      leading: Icon(Icons.book),
+                      title: Text(diary['feeling']),
+                      subtitle: Text(diary['description']),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _navigateToAddEditPage(id: diary['id']),
+                      ),
+                      onLongPress: () => _navigateToAddEditPage(id: diary['id']),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToAddEditPage(),
@@ -197,6 +202,8 @@ class _AddEditPageState extends State<AddEditPage> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
   String _selectedFeeling = '';
+  bool _isMoodSelected = false;
+  List<bool> _moodSelections = List.filled(_feelings.length, false);
 
   @override
   void initState() {
@@ -204,6 +211,8 @@ class _AddEditPageState extends State<AddEditPage> {
     if (widget.existingDiary != null) {
       _selectedFeeling = widget.existingDiary!['feeling'];
       _descriptionController.text = widget.existingDiary!['description'];
+      _isMoodSelected = true;
+      _moodSelections[_feelings.indexWhere((element) => element['feeling'] == _selectedFeeling)] = true;
     }
   }
 
@@ -263,16 +272,24 @@ class _AddEditPageState extends State<AddEditPage> {
               onTap: () {
                 setState(() {
                   _selectedFeeling = _feelings[index]['feeling']!;
+                  _isMoodSelected = true;
+                  _moodSelections = List.filled(_feelings.length, false);
+                  _moodSelections[index] = true;
                 });
                 Navigator.of(context).pop();
               },
               child: Column(
                 children: [
-                  Image.asset(
-                    _feelings[index]['gif']!,
-                    width: 50,
-                    height: 50,
-                  ).animate(),
+                  ColorFiltered(
+                    colorFilter: _moodSelections[index]
+                        ? ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                        : ColorFilter.mode(Colors.grey, BlendMode.saturation),
+                    child: Image.asset(
+                      _feelings[index]['gif']!,
+                      width: 50,
+                      height: 50,
+                    ),
+                  ),
                   Text(_feelings[index]['feeling']!),
                 ],
               ),
@@ -311,15 +328,23 @@ class _AddEditPageState extends State<AddEditPage> {
                     onTap: () {
                       setState(() {
                         _selectedFeeling = _feelings[index]['feeling']!;
+                        _isMoodSelected = true;
+                        _moodSelections = List.filled(_feelings.length, false);
+                        _moodSelections[index] = true;
                       });
                     },
                     child: Column(
                       children: [
-                        Image.asset(
-                          _feelings[index]['gif']!,
-                          width: 50,
-                          height: 50,
-                        ).animate(),
+                        ColorFiltered(
+                          colorFilter: _moodSelections[index]
+                              ? ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                              : ColorFilter.mode(Colors.grey, BlendMode.saturation),
+                          child: Image.asset(
+                            _feelings[index]['gif']!,
+                            width: 50,
+                            height: 50,
+                          ),
+                        ),
                         Text(_feelings[index]['feeling']!),
                       ],
                     ),
@@ -328,10 +353,12 @@ class _AddEditPageState extends State<AddEditPage> {
               ),
               const SizedBox(height: 30),
               GestureDetector(
-                onTap: () => (){},
+                onTap: _isMoodSelected ? null : (){},
                 child: AbsorbPointer(
+                  absorbing: !_isMoodSelected,
                   child: TextField(
                     controller: _descriptionController,
+                    enabled: _isMoodSelected,
                     decoration: InputDecoration(
                       hintText: 'Description',
                       suffixIcon: IconButton(
