@@ -14,7 +14,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _diaries = [];
+  List<Map<String, dynamic>> _filteredDiaries = [];
   bool _isLoading = true;
+  String _filterOption = 'Today';
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       // Sort diaries by time and date created
       _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
 
+      _filterDiaries('Today'); // Filter by today's date by default
       _isLoading = false;
     });
   }
@@ -125,6 +129,48 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  void _filterDiaries(String option) {
+    setState(() {
+      _filterOption = option;
+      DateTime now = DateTime.now();
+      if (option == 'Today') {
+        _filteredDiaries = _diaries.where((diary) {
+          return diary['createdAt'].day == now.day &&
+              diary['createdAt'].month == now.month &&
+              diary['createdAt'].year == now.year;
+        }).toList();
+      } else if (option == 'This Week') {
+        _filteredDiaries = _diaries.where((diary) {
+          return diary['createdAt'].isAfter(now.subtract(Duration(days: now.weekday))) &&
+              diary['createdAt'].isBefore(now.add(Duration(days: DateTime.daysPerWeek - now.weekday)));
+        }).toList();
+      } else if (option == 'Select Date' && _selectedDate != null) {
+        _filteredDiaries = _diaries.where((diary) {
+          return diary['createdAt'].day == _selectedDate!.day &&
+              diary['createdAt'].month == _selectedDate!.month &&
+              diary['createdAt'].year == _selectedDate!.year;
+        }).toList();
+      } else {
+        _filteredDiaries = _diaries;
+      }
+    });
+  }
+
+  void _selectDate() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        _filterDiaries('Select Date');
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,7 +191,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     child: CircularProgressIndicator(),
                   )
                 : ListView(
-                    padding: EdgeInsets.only(bottom: 80), // Add padding to avoid overlap with the navigation bar
+                    padding: EdgeInsets.only(bottom: 80),
                     children: [
                       SizedBox(height: 20,),
                       Text(
@@ -158,8 +204,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color.fromRGBO(243, 167, 18, 1)),
                       ),
-                      SizedBox(height: 50,),
-                      ..._diaries.map((diary) {
+                      SizedBox(height: 20,),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FilterChip(
+                              label: Text('Today'),
+                              selected: _filterOption == 'Today',
+                              onSelected: (bool selected) {
+                                _filterDiaries('Today');
+                              },
+                            ),
+                            SizedBox(width: 10),
+                            FilterChip(
+                              label: Text('This Week'),
+                              selected: _filterOption == 'This Week',
+                              onSelected: (bool selected) {
+                                _filterDiaries('This Week');
+                              },
+                            ),
+                            SizedBox(width: 10),
+                            FilterChip(
+                              label: Text('Select Date'),
+                              selected: _filterOption == 'Select Date',
+                              onSelected: (bool selected) {
+                                _selectDate();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+                      if (_filteredDiaries.isEmpty) 
+                        Center(
+                          child: Text(
+                            'No logs today',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ..._filteredDiaries.map((diary) {
                         return Dismissible(
                           key: Key(diary['id']),
                           background: Container(
