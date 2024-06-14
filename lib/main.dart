@@ -17,9 +17,6 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         fontFamily: 'Roboto',
-        textTheme: TextTheme(
-          bodyText2: TextStyle(color: Colors.black, fontSize: 16),
-        ),
       ),
       home: HomePage(),
     );
