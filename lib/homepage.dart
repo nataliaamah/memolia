@@ -82,187 +82,234 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget getImageForFeeling(String feeling) {
-  switch (feeling) {
-    case 'Happy':
-      return Image.asset('assets/happy.gif', width: 24, height: 24);
-    case 'Loved':
-      return Image.asset('assets/loved.gif', width: 24, height: 24);
-    case 'Excited':
-      return Image.asset('assets/excited.gif', width: 24, height: 24);
-    case 'Sad':
-      return Image.asset('assets/sad.gif', width: 24, height: 24);
-    case 'Tired':
-      return Image.asset('assets/tired.gif', width: 24, height: 24);
-    case 'Angry':
-      return Image.asset('assets/angry.gif', width: 24, height: 24);
-    case 'Annoyed':
-      return Image.asset('assets/annoyed.gif', width: 24, height: 24);
-    case 'Other':
-    default:
-      return Image.asset('assets/unknown.gif', width: 24, height: 24);
+    switch (feeling) {
+      case 'Happy':
+        return Image.asset('assets/happy.gif', width: 24, height: 24);
+      case 'Loved':
+        return Image.asset('assets/loved.gif', width: 24, height: 24);
+      case 'Excited':
+        return Image.asset('assets/excited.gif', width: 24, height: 24);
+      case 'Sad':
+        return Image.asset('assets/sad.gif', width: 24, height: 24);
+      case 'Tired':
+        return Image.asset('assets/tired.gif', width: 24, height: 24);
+      case 'Angry':
+        return Image.asset('assets/angry.gif', width: 24, height: 24);
+      case 'Annoyed':
+        return Image.asset('assets/annoyed.gif', width: 24, height: 24);
+      case 'Other':
+      default:
+        return Image.asset('assets/unknown.gif', width: 24, height: 24);
+    }
   }
-}
 
-
-Color getColorForFeeling(String feeling) {
-  switch (feeling) {
-    case 'Happy':
-      return Colors.yellow[100]!;
-    case 'Loved':
-      return Colors.pink[100]!;
-    case 'Excited':
-      return Colors.orange[100]!;
-    case 'Sad':
-      return Colors.blue[100]!;
-    case 'Tired':
-      return Colors.grey[100]!;
-    case 'Angry':
-      return Colors.red[100]!;
-    case 'Annoyed':
-      return Colors.brown[100]!;
-    case 'Other':
-    default:
-      return Colors.green[100]!;
+  Color getColorForFeeling(String feeling) {
+    switch (feeling) {
+      case 'Happy':
+        return Colors.yellow[100]!;
+      case 'Loved':
+        return Colors.pink[100]!;
+      case 'Excited':
+        return Colors.orange[100]!;
+      case 'Sad':
+        return Colors.blue[100]!;
+      case 'Tired':
+        return Colors.grey[100]!;
+      case 'Angry':
+        return Colors.red[100]!;
+      case 'Annoyed':
+        return Colors.brown[100]!;
+      case 'Other':
+      default:
+        return Colors.green[100]!;
+    }
   }
-}
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
-    appBar: AppBar(
-      title: Image.asset("assets/memolia_name.png", height: 300, width: 300,),
-      centerTitle: true,
+  Widget build(BuildContext context) {
+    return Scaffold(
       backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
-    ),
-    body: Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: () async {
-            _refreshDiaries();
-          },
-          child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : ListView(
-                  padding: EdgeInsets.only(bottom: 80), // Add padding to avoid overlap with the navigation bar
-                  children: [
-                    SizedBox(height: 20,),
-                    Text(
-                      'Welcome, User',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    Text(
-                      "How are you feeling today?",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color.fromRGBO(243, 167, 18, 1)),
-                    ),
-                    SizedBox(height: 50,),
-                    ..._diaries.map((diary) {
-                      return Card(
-                        color: getColorForFeeling(diary['feeling']),
-                        margin: const EdgeInsets.all(10),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(
+        title: Image.asset("assets/memolia_name.png", height: 300, width: 300,),
+        centerTitle: true,
+        backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
+      ),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: () async {
+              _refreshDiaries();
+            },
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : ListView(
+                    padding: EdgeInsets.only(bottom: 80), // Add padding to avoid overlap with the navigation bar
+                    children: [
+                      SizedBox(height: 20,),
+                      Text(
+                        'Welcome, User',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      Text(
+                        "How are you feeling today?",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color.fromRGBO(243, 167, 18, 1)),
+                      ),
+                      SizedBox(height: 50,),
+                      ..._diaries.map((diary) {
+                        return Dismissible(
+                          key: Key(diary['id']),
+                          background: Container(
+                            color: Colors.blue,
+                            child: Icon(Icons.edit, color: Colors.white),
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.only(left: 20),
+                          ),
+                          secondaryBackground: Container(
+                            color: Colors.red,
+                            child: Icon(Icons.delete, color: Colors.white),
+                            alignment: Alignment.centerRight,
+                            padding: EdgeInsets.only(right: 20),
+                          ),
+                          confirmDismiss: (direction) async {
+                            if (direction == DismissDirection.startToEnd) {
+                              _navigateToAddEditPage(id: diary['id']);
+                              return false;
+                            } else if (direction == DismissDirection.endToStart) {
+                              final bool res = await showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text("Confirm"),
+                                    content: Text("Are you sure you wish to delete this item?"),
+                                    actions: <Widget>[
+                                      ElevatedButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: Text("DELETE")
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.of(context).pop(false),
+                                        child: Text("CANCEL"),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                              return res;
+                            }
+                            return false;
+                          },
+                          onDismissed: (direction) {
+                            if (direction == DismissDirection.endToStart) {
+                              _deleteDiary(diary['id']);
+                            }
+                          },
+                          child: Card(
+                            color: getColorForFeeling(diary['feeling']),
+                            margin: const EdgeInsets.all(10),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  getImageForFeeling(diary['feeling']),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      getImageForFeeling(diary['feeling']),
+                                      Text(
+                                        formatDateTime(diary['createdAt']),
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8),
                                   Text(
-                                    formatDateTime(diary['createdAt']),
-                                    style: TextStyle(fontSize: 10),
+                                    diary['feeling'],
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    diary['description'].length > 50
+                                        ? '${diary['description'].substring(0, 50)}...'
+                                        : diary['description'],
+                                    style: TextStyle(fontSize: 14),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 8),
-                              Text(
-                                diary['feeling'],
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                diary['description'].length > 50
-                                    ? '${diary['description'].substring(0, 50)}...'
-                                    : diary['description'],
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ],
-                ),
-        ),
-        Positioned(
-          left: 30,
-          right: 30,
-          bottom: 10,
-          child: ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
-              child: Container(
-                height: 60, // Adjust the height here
-                color: Colors.transparent,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(243, 167, 18, 0.8),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
+                        );
+                      }).toList(),
                     ],
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: <Widget>[
-                      IconButton(
-                        icon: Icon(Icons.home),
-                        color: const Color.fromRGBO(14, 14, 37, 1),
-                        onPressed: () {
-                          // Handle Home button press
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.add_circle_outline_rounded),
-                        iconSize: 28,
-                        color: const Color.fromRGBO(14, 14, 37, 1),
-                        onPressed: () {
-                          _navigateToAddEditPage();
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.people_alt_rounded),
-                        color: const Color.fromRGBO(14, 14, 37, 1),
-                        onPressed: () {
-                          // Handle People button press
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.settings),
-                        color: const Color.fromRGBO(14, 14, 37, 1),
-                        onPressed: () {
-                          // Handle Settings button press
-                        },
-                      ),
-                    ],
+          ),
+          Positioned(
+            left: 30,
+            right: 30,
+            bottom: 10,
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                child: Container(
+                  height: 60, // Adjust the height here
+                  color: Colors.transparent,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(243, 167, 18, 0.8),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        IconButton(
+                          icon: Icon(Icons.home),
+                          color: const Color.fromRGBO(14, 14, 37, 1),
+                          onPressed: () {
+                            // Handle Home button press
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.add_circle_outline_rounded),
+                          iconSize: 28,
+                          color: const Color.fromRGBO(14, 14, 37, 1),
+                          onPressed: () {
+                            _navigateToAddEditPage();
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.people_alt_rounded),
+                          color: const Color.fromRGBO(14, 14, 37, 1),
+                          onPressed: () {
+                            // Handle People button press
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.settings),
+                          color: const Color.fromRGBO(14, 14, 37, 1),
+                          onPressed: () {
+                            // Handle Settings button press
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
 }
