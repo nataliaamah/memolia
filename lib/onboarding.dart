@@ -98,13 +98,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   Widget buildOnboardingOne(BuildContext context) {
     return SafeArea(
       child: Container(
+        color: Color.fromRGBO(57, 94, 102, 1),
         width: double.maxFinite,
         padding: EdgeInsets.symmetric(horizontal: 51, vertical: 92),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Spacer(flex: 10),
-            Image.asset('assets/track.png', height: 300, width: 400),
+            Spacer(flex: 40),
+            Image.asset('assets/track.png', height: 300, width: 500),
             Text(
               "Keep Track of Your Emotions",
               textAlign: TextAlign.center,
@@ -120,7 +121,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                   controller: _pageViewController,
                   count: 2,
                   effect: ExpandingDotsEffect(
-                    activeDotColor: Color(0xFF9CE1CF),
+                    activeDotColor: Color.fromARGB(255, 255, 255, 255),
                     dotHeight: 10,
                     dotWidth: 10,
                   ),
@@ -137,13 +138,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   Widget buildOnboardingTwo(BuildContext context) {
     return SafeArea(
       child: Container(
+        color: Color.fromRGBO(65, 93, 67, 1),
         width: double.maxFinite,
         padding: EdgeInsets.symmetric(horizontal: 51, vertical: 92),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Spacer(flex: 10),
-            Image.asset('assets/control.png', height: 300, width: 400),
+            Spacer(flex: 40),
+            Image.asset('assets/control.png', height: 300, width: 500),
             Text(
               "Take Control Over Your Emotions",
               textAlign: TextAlign.center,
@@ -159,7 +161,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                   controller: _pageViewController,
                   count: 2,
                   effect: ExpandingDotsEffect(
-                    activeDotColor: Color(0xFF9CE1CF),
+                    activeDotColor: Color.fromARGB(255, 255, 255, 255),
                     dotHeight: 10,
                     dotWidth: 10,
                   ),
@@ -188,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             );
           },
           child: Padding(
-            padding: EdgeInsets.only(bottom: 60,),
+            padding: EdgeInsets.only(right: 50),
             child: Image.asset('assets/images/nextArrow.png', height: 30, width: 30),
           ),
         ),
@@ -196,7 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
     );
   }
 
-  // arrow next
+  // arrow back
   Row _navigationButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -215,8 +217,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
               );
             },
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 60,),
-              child: Image.asset('assets/images/backArrow.png', height: 30, width: 30),
+              padding: EdgeInsets.symmetric(vertical: 60, horizontal: 50),
+              child: Image.asset('assets/backArrow.png', height: 30, width: 30),
             ),
           )
         else
@@ -236,10 +238,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             },
             child: Padding(
               padding: EdgeInsets.only(bottom: 60, left: 313),
-              child: Image.asset('assets/images/nextArrow.png', height: 30, width: 30),
+              child: Image.asset('assets/nextArrow.png', height: 30, width: 30),
             ),
           )
-        else if (_currentPageIndex < 2)
+        else if (_currentPageIndex < 1)
           GestureDetector(
             onTap: () {
               setState(() {
@@ -253,7 +255,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             },
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 60, horizontal: 50),
-              child: Image.asset('assets/images/nextArrow.png', height: 30, width: 30),
+              child: Image.asset('assets/nextArrow.png', height: 30, width: 30),
             ),
           )
         else
