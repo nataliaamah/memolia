@@ -12,7 +12,12 @@
           "package_name": "com.example.memolia"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "911904224271-lp2ectdmvk1tdnkldvbokpf12932ta36.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDtCJI7IeJX68Rwmy3A5D_xTyg4USq1Afo"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "911904224271-lp2ectdmvk1tdnkldvbokpf12932ta36.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
