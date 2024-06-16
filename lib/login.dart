@@ -11,6 +11,17 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _auth.authStateChanges().listen((User? user) {
+      setState(() {
+        _user = user;
+      });
+    });
+  }
 
   Future<void> _signInWithGoogle() async {
     try {
@@ -25,16 +36,7 @@ class _LoginPageState extends State<LoginPage> {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      final User? user = userCredential.user;
-
-      if (user != null) {
-        // Sign-in successful
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-      }
+      await _auth.signInWithCredential(credential);
     } catch (e) {
       print(e); // Handle error
     }
@@ -43,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(125, 40, 253, 1), // Primary background color from homepage
+      backgroundColor: Color.fromRGBO(125, 40, 253, 1),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -55,32 +57,52 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white, // Match the text color from the homepage
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _signInWithGoogle,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(243, 167, 18, 1), // Button color from homepage
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  textStyle: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white, // Ensure text color is white for readability
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                child: Text('Sign in with Google'),
-              ),
+              _user != null ? _userInfo() : _googleSignInButton(),
             ],
           ),
         ),
       ),
     );
   }
+
+  Widget _googleSignInButton() {
+    return Center(
+      child: SizedBox(
+        height: 50,
+        child: ElevatedButton(
+          onPressed: _signInWithGoogle,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color.fromRGBO(243, 167, 18, 1),
+            padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+            textStyle: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
+          child: Text('Sign in with Google'),
+        ),
+      ),
+    );
+  }
+
+  Widget _userInfo() {
+    return Center(
+      child: Text(
+        'Hello, ${_user?.displayName}',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 }
-
-

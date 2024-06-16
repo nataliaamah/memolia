@@ -1,9 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'firebase_helper.dart';
+import 'login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -19,17 +22,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String _filterOption = 'Today';
   DateTime? _selectedDate;
   List<DateTime> _availableDates = [];
+  User? user;
 
   @override
   void initState() {
     super.initState();
+    user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showLocalStorageNotification());
+    }
     _refreshDiaries();
+  }
+  
+  String formatDateTime(DateTime dateTime) {
+    final DateFormat formatter = DateFormat('EEE | dd MMM yy | HH:mm');
+    return formatter.format(dateTime);
   }
 
   void _refreshDiaries() async {
     final data = await FirebaseHelper.getDiaries();
     setState(() {
-      _diaries = data.map((diary) {
+      _diaries = data.where((diary) => diary['userId'] == user?.uid).map((diary) {
         if (diary['createdAt'] is String) {
           return {
             ...diary,
@@ -50,9 +63,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  String formatDateTime(DateTime dateTime) {
-    final DateFormat formatter = DateFormat('EEE | dd MMM yy | HH:mm');
-    return formatter.format(dateTime);
+  void _showLocalStorageNotification() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Notice'),
+        content: Text('Without logging in, your logs will only be saved on this device and not across devices.'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: Text('Login'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   void _navigateToAddEditPage({String? id}) {
@@ -198,7 +232,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     children: [
                       SizedBox(height: 20,),
                       Text(
-                        'Welcome, User',
+                        'Welcome, ${user?.displayName ?? "User"}',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
@@ -390,7 +424,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           icon: Icon(Icons.people_alt_rounded),
                           color: const Color.fromRGBO(14, 14, 37, 1),
                           onPressed: () {
-                            // Handle People button press
+                            if (user == null) {
+                              _showLoginRequiredNotification();
+                            } else {
+                              Navigator.of(context).pop();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ProfilePage()),
+                              );
+                            }
                           },
                         ),
                         IconButton(
@@ -406,6 +448,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoginRequiredNotification() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Login Required'),
+        content: Text('You need to log in to view this page.'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: Text('Login'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+              );
+            },
           ),
         ],
       ),
