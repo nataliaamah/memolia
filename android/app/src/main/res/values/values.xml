@@ -1,5 +1,5 @@
 <resources>
-    <string name="default_web_client_id">YOUR_WEB_CLIENT_ID</string>
+    <string name="default_web_client_id">911904224271-lp2ectdmvk1tdnkldvbokpf12932ta36.apps.googleusercontent.com</string>
     <string name="firebase_database_url">YOUR_DATABASE_URL</string>
     <string name="gcm_defaultSenderId">911904224271</string>
     <string name="google_api_key">AIzaSyDtCJI7IeJX68Rwmy3A5D_xTyg4USq1Afo</string>
