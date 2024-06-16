@@ -12,6 +12,8 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   User? _user;
+  bool _isSigningIn = false;
+  bool _signInSuccessful = false;
 
   @override
   void initState() {
@@ -24,10 +26,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isSigningIn = true;
+    });
+    
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        // The user canceled the sign-in
+        setState(() {
+          _isSigningIn = false;
+        });
         return;
       }
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -37,8 +45,21 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       await _auth.signInWithCredential(credential);
+
+      setState(() {
+        _signInSuccessful = true;
+      });
+
+      await Future.delayed(Duration(seconds: 3));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
     } catch (e) {
       print(e); // Handle error
+      setState(() {
+        _isSigningIn = false;
+      });
     }
   }
 
@@ -61,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               SizedBox(height: 20),
-              _user != null ? _userInfo() : _googleSignInButton(),
+              _isSigningIn ? _signingInIndicator() : (_user != null ? _userInfo() : _googleSignInButton()),
             ],
           ),
         ),
@@ -90,6 +111,39 @@ class _LoginPageState extends State<LoginPage> {
           child: Text('Sign in with Google'),
         ),
       ),
+    );
+  }
+
+  Widget _signingInIndicator() {
+    return Center(
+      child: _signInSuccessful ? Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+            Image.asset(
+              "assets/sparkle.gif",
+              height: 30,),
+            Image.asset(
+            'assets/check.gif',
+            height: 100,),
+            Image.asset(
+              "assets/sparkle.gif",
+              height: 30,),
+          ]
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Login Successful!',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ) : CircularProgressIndicator(),
     );
   }
 
