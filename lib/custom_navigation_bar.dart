@@ -19,7 +19,7 @@ class CustomNavigationBar extends StatelessWidget {
           color: Colors.transparent,
           child: Container(
             decoration: BoxDecoration(
-              color: Color.fromRGBO(255, 255, 255, 0.8),
+              color: Color.fromRGBO(243, 167, 18, 0.8),
               borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(20)),
               boxShadow: [
                 BoxShadow(

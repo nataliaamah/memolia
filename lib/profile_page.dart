@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login.dart';
 import 'homepage.dart';
+import 'login.dart';
 import 'addeditpage.dart';
-import 'custom_navigation_bar.dart'; // Import the custom navigation bar
+import 'custom_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -120,12 +119,11 @@ class ProfilePage extends StatelessWidget {
                           SizedBox(height: 50),
                           ElevatedButton(
                             onPressed: () async {
-                              await FirebaseAuth.instance.signOut().then((_) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => HomePage()),
-                                );
-                              });
+                              await FirebaseAuth.instance.signOut();
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => HomePage()),
+                              );
                             },
                             child: Text(
                               'Logout',

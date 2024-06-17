@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'homepage.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -9,154 +10,158 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  User? _user;
   bool _isSigningIn = false;
-  bool _signInSuccessful = false;
+  bool _isLoginConfirmed = false;
 
   @override
-  void initState() {
-    super.initState();
-    _auth.authStateChanges().listen((User? user) {
-      setState(() {
-        _user = user;
-      });
-    });
+  void dispose() {
+    super.dispose();
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isSigningIn = true;
-    });
-    
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF7D28FD), Color(0xFFA851F7)], // Purple gradient
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 40,
+            left: 20,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+          Column(
+            children: [
+              SizedBox(height: 300),
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  children: [
+                    Text(
+                      "Welcome to Memolia",
+                      style: TextStyle(
+                        fontSize: 32,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 32),
+                    if (!_isLoginConfirmed)
+                      _isSigningIn
+                          ? CircularProgressIndicator()
+                          : ElevatedButton(
+                              onPressed: () async {
+                                setState(() {
+                                  _isSigningIn = true;
+                                });
+
+                                User? user = await signInWithGoogle();
+
+                                if (mounted) {
+                                  setState(() {
+                                    _isSigningIn = false;
+                                  });
+
+                                  if (user != null) {
+                                    setState(() {
+                                      _isLoginConfirmed = true;
+                                    });
+
+                                    await Future.delayed(Duration(seconds: 3));
+
+                                    if (mounted) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => HomePage()),
+                                      );
+                                    }
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF0E0E25), // Button color to match previous gradient color
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'assets/google_logo.png',
+                                      height: 24,
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Sign in with Google',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                    if (_isLoginConfirmed)
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset('assets/sparkle.gif', height: 100),
+                              Image.asset('assets/check.gif', height: 100, width: 100,),
+                              Image.asset('assets/sparkle.gif', height: 100),
+                            ],
+                          ),
+                          SizedBox(height: 30),
+                          Text(
+                            "Login Successful",
+                            style: GoogleFonts.quicksand(
+                              fontSize: 27,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
-        setState(() {
-          _isSigningIn = false;
-        });
-        return;
+        return null; // The user canceled the sign-in
       }
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-
-      await _auth.signInWithCredential(credential);
-
-      setState(() {
-        _signInSuccessful = true;
-      });
-
-      await Future.delayed(Duration(seconds: 3));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      return userCredential.user;
     } catch (e) {
-      print(e); // Handle error
-      setState(() {
-        _isSigningIn = false;
-      });
+      print(e);
+      return null;
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(125, 40, 253, 1),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Welcome Back!',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 20),
-              _isSigningIn ? _signingInIndicator() : (_user != null ? _userInfo() : _googleSignInButton()),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _googleSignInButton() {
-    return Center(
-      child: SizedBox(
-        height: 50,
-        child: ElevatedButton(
-          onPressed: _signInWithGoogle,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color.fromRGBO(243, 167, 18, 1),
-            padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-            textStyle: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-          ),
-          child: Text('Sign in with Google'),
-        ),
-      ),
-    );
-  }
-
-  Widget _signingInIndicator() {
-    return Center(
-      child: _signInSuccessful ? Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children:[
-            Image.asset(
-              "assets/sparkle.gif",
-              height: 30,),
-            Image.asset(
-            'assets/check.gif',
-            height: 100,),
-            Image.asset(
-              "assets/sparkle.gif",
-              height: 30,),
-          ]
-          ),
-          SizedBox(height: 20),
-          Text(
-            'Login Successful!',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ) : CircularProgressIndicator(),
-    );
-  }
-
-  Widget _userInfo() {
-    return Center(
-      child: Text(
-        'Hello, ${_user?.displayName}',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-    );
   }
 }

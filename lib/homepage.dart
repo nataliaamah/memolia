@@ -1,13 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'firebase_helper.dart';
-import 'login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'profile_page.dart';
 import 'addeditpage.dart';
-import 'custom_navigation_bar.dart'; // Import the custom navigation bar
+import 'login.dart';
+import 'package:intl/intl.dart';
+import 'custom_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'firebase_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -35,6 +35,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _refreshDiaries();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   String formatDateTime(DateTime dateTime) {
     final DateFormat formatter = DateFormat('EEE | dd MMM yy | HH:mm');
     return formatter.format(dateTime);
@@ -42,26 +47,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   void _refreshDiaries() async {
     final data = await FirebaseHelper.getDiaries();
-    setState(() {
-      _diaries = data.map((diary) {
-        if (diary['createdAt'] is String) {
-          return {
-            ...diary,
-            'createdAt': DateTime.parse(diary['createdAt']),
-          };
-        } else {
-          return diary;
-        }
-      }).toList();
+    if (mounted) {
+      setState(() {
+        _diaries = data.map((diary) {
+          if (diary['createdAt'] is String) {
+            return {
+              ...diary,
+              'createdAt': DateTime.parse(diary['createdAt']),
+            };
+          } else {
+            return diary;
+          }
+        }).toList();
 
-      // Sort diaries by time and date created
-      _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
+        _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
 
-      // Get available dates
-      _availableDates = _diaries.map((diary) => diary['createdAt'] as DateTime).toSet().toList();
-      _filterDiaries('Today'); // Filter by today's date by default
-      _isLoading = false;
-    });
+        _availableDates = _diaries.map((diary) => diary['createdAt'] as DateTime).toSet().toList();
+        _filterDiaries('Today');
+        _isLoading = false;
+      });
+    }
   }
 
   void _showLocalStorageNotification() {
