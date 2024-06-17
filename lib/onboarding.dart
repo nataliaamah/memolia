@@ -26,7 +26,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerProviderStateMixin {
   late PageController _pageViewController;
-  late TabController _tabController;
   int _currentPageIndex = 0;
 
   Future<void> _completeOnboarding() async {
@@ -41,13 +40,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   void initState() {
     super.initState();
     _pageViewController = PageController();
-    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _pageViewController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -200,80 +197,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
 
   // arrow back
   Row _navigationButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Only show 'Previous' button if currentPageIndex is greater than 0
-        if (_currentPageIndex > 0)
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _currentPageIndex -= 1;
-              });
-              _pageViewController.animateToPage(
-                _currentPageIndex,
-                duration: Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-              );
-            },
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 60, horizontal: 50),
-              child: Image.asset('assets/backArrow.png', height: 30, width: 30),
-            ),
-          )
-        else
-          SizedBox(width: 30), // Placeholder to keep alignment
-
-        if (_currentPageIndex == 0)
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _currentPageIndex += 1;
-              });
-              _pageViewController.animateToPage(
-                _currentPageIndex,
-                duration: Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-              );
-            },
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 60, left: 313),
-              child: Image.asset('assets/nextArrow.png', height: 30, width: 30),
-            ),
-          )
-        else if (_currentPageIndex < 1)
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _currentPageIndex += 1;
-              });
-              _pageViewController.animateToPage(
-                _currentPageIndex,
-                duration: Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-              );
-            },
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 60, horizontal: 50),
-              child: Image.asset('assets/nextArrow.png', height: 30, width: 30),
-            ),
-          )
-        else
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HomePage(),
-                ),
-              );
-            },
-            child: Text('Next', style: TextStyle(fontSize: 18, fontFamily: "Roboto", fontWeight: FontWeight.w400, color: Color.fromRGBO(255, 255, 255, 1))),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 60, horizontal: 50),
-            ),
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.end, // Align buttons to the end of the row
+    children: [
+      // Only show 'Previous' button if currentPageIndex is greater than 0
+      if (_currentPageIndex > 0)
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _currentPageIndex -= 1;
+            });
+            _pageViewController.animateToPage(
+              _currentPageIndex,
+              duration: Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.only(right: 230), // Adjust horizontal padding as needed
+            child: Image.asset('assets/backArrow.png', height: 30, width: 30),
           ),
-      ],
-    );
-  }
+        )
+      else
+        SizedBox(width: 50), // Placeholder to maintain alignment
+
+      if (_currentPageIndex < 1) // Show 'Next' button only on first and second screens
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _currentPageIndex += 1;
+            });
+            _pageViewController.animateToPage(
+              _currentPageIndex,
+              duration: Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust horizontal padding as needed
+            child: Image.asset('assets/nextArrow.png', height: 30, width: 30),
+          ),
+        )
+      else
+        TextButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomePage(),
+              ),
+            );
+          },
+          child: Text('Next', style: TextStyle(fontSize: 18, fontFamily: "Roboto", fontWeight: FontWeight.w400, color: Color.fromRGBO(255, 255, 255, 1))),
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust padding as needed
+          ),
+        ),
+    ],
+  );
+}
+
+
+
 }
