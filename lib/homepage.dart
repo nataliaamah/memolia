@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'profile_page.dart';
 import 'addeditpage.dart';
 import 'login.dart';
@@ -8,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'custom_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -31,8 +32,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showLocalStorageNotification());
+      _loadLocalDiaries();
+    } else {
+      _refreshDiaries();
     }
-    _refreshDiaries();
   }
 
   @override
@@ -45,7 +48,57 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return formatter.format(dateTime);
   }
 
+  Future<void> _loadLocalDiaries() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? localDiaries = prefs.getString('localDiaries');
+    if (localDiaries != null) {
+      final List<dynamic> decodedDiaries = jsonDecode(localDiaries);
+      setState(() {
+        _diaries = decodedDiaries.cast<Map<String, dynamic>>().map((diary) {
+          if (diary['createdAt'] is String) {
+            return {
+              ...diary,
+              'createdAt': DateTime.parse(diary['createdAt']),
+            };
+          } else {
+            return diary;
+          }
+        }).toList();
+        _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
+        _availableDates = _diaries.map((diary) => diary['createdAt'] as DateTime).toSet().toList();
+        _filterDiaries('Today');
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveLocalDiaries() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Convert DateTime objects to ISO 8601 strings
+  List<Map<String, dynamic>> diariesJson = _diaries.map((diary) {
+    return {
+      'id': diary['id'],
+      'feeling': diary['feeling'],
+      'description': diary['description'],
+      'createdAt': diary['createdAt'].toIso8601String(), // Convert DateTime to ISO 8601 string
+    };
+  }).toList();
+
+  final String encodedDiaries = jsonEncode(diariesJson);
+  await prefs.setString('localDiaries', encodedDiaries);
+}
+
   void _refreshDiaries() async {
+    if (user == null) {
+      _loadLocalDiaries();
+      return;
+    }
+
     final data = await FirebaseHelper.getDiaries();
     if (mounted) {
       setState(() {
@@ -95,33 +148,45 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _navigateToAddEditPage({String? id}) {
-    if (id != null) {
-      final existingDiary = _diaries.firstWhere((element) => element['id'] == id);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AddEditPage(
-            id: id,
-            existingDiary: existingDiary,
-            refreshDiaries: _refreshDiaries,
-          ),
+  void _navigateToAddEditPage({String? id}) async {
+  if (id != null) {
+    final existingDiary = _diaries.firstWhere((element) => element['id'] == id);
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditPage(
+          id: id,
+          existingDiary: existingDiary,
+          refreshDiaries: _refreshDiaries,
         ),
-      );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AddEditPage(
-            refreshDiaries: _refreshDiaries,
-          ),
+      ),
+    );
+  } else {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditPage(
+          refreshDiaries: _refreshDiaries,
         ),
-      );
-    }
+      ),
+    );
   }
+  if (user == null) {
+    _saveLocalDiaries(); // Save to local storage after adding or editing
+  }
+  _refreshDiaries();
+}
+
 
   void _deleteDiary(String id) async {
-    await FirebaseHelper.deleteDiary(id);
+    if (user == null) {
+      setState(() {
+        _diaries.removeWhere((diary) => diary['id'] == id);
+        _saveLocalDiaries();
+      });
+    } else {
+      await FirebaseHelper.deleteDiary(id);
+    }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Successfully deleted a diary!'),
     ));
@@ -238,7 +303,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     children: [
                       SizedBox(height: 20),
                       Text(
-                        'Welcome, ${user?.displayName ?? "User"}',
+                        'Welcome, ${user?.displayName?.split(' ')[0] ?? "User"}',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.quicksand(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                       ),

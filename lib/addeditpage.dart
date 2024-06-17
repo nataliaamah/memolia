@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'firebase_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddEditPage extends StatefulWidget {
   final String? id;
@@ -15,8 +17,7 @@ class AddEditPage extends StatefulWidget {
 
 class _AddEditPageState extends State<AddEditPage> {
   final TextEditingController _descriptionController = TextEditingController();
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  bool _isListening = false;
+
   String _selectedFeeling = '';
   bool _isMoodSelected = false;
   List<bool> _moodSelections = List.filled(_feelings.length, false);
@@ -32,43 +33,51 @@ class _AddEditPageState extends State<AddEditPage> {
     }
   }
 
-  Future<void> _addDiary() async {
-    await FirebaseHelper.createDiary(
-      _selectedFeeling, 
-      _descriptionController.text,
-    );
-    widget.refreshDiaries();
-  }
+  Future<void> _saveDiary() async {
+  final DateTime now = DateTime.now();
+  final String createdAt = now.toIso8601String();
 
-  Future<void> _updateDiary(String id) async {
-    await FirebaseHelper.updateDiary(
-      id, 
-      _selectedFeeling, 
-      _descriptionController.text,
-    );
-    widget.refreshDiaries();
-  }
+  final newDiary = {
+    'id': widget.id ?? now.toString(),
+    'feeling': _selectedFeeling,
+    'description': _descriptionController.text,
+    'createdAt': createdAt,
+  };
 
-  void _listen() async {
-    if (!_isListening) {
-      bool available = await _speech.initialize(
-        onStatus: (val) => print('onStatus: $val'),
-        onError: (val) => print('onError: $val'),
-      );
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: (val) => setState(() {
-            _descriptionController.text = val.recognizedWords;
-            _isListening = false;
-          }),
-        );
-      }
+  if (FirebaseAuth.instance.currentUser == null) {
+    // Save locally if user is not logged in
+    final prefs = await SharedPreferences.getInstance();
+    List<Map<String, dynamic>> localDiaries = [];
+    final String? localDiariesString = prefs.getString('localDiaries');
+    if (localDiariesString != null) {
+      final List<dynamic> decodedDiaries = jsonDecode(localDiariesString);
+      localDiaries = decodedDiaries.cast<Map<String, dynamic>>().map((diary) {
+        // Ensure 'createdAt' is parsed into DateTime
+        return {
+          ...diary,
+          'createdAt': diary['createdAt'], // Keep it as String
+        };
+      }).toList();
+    }
+    if (widget.id != null) {
+      localDiaries.removeWhere((diary) => diary['id'] == widget.id);
+    }
+    localDiaries.add(newDiary);
+    final String encodedDiaries = jsonEncode(localDiaries);
+    await prefs.setString('localDiaries', encodedDiaries);
+  } else {
+    // Save to Firebase if user is logged in
+    if (widget.id == null) {
+      await FirebaseHelper.createDiary(_selectedFeeling, _descriptionController.text);
     } else {
-      setState(() => _isListening = false);
-      _speech.stop();
+      await FirebaseHelper.updateDiary(widget.id!, _selectedFeeling, _descriptionController.text);
     }
   }
+
+  widget.refreshDiaries();
+  Navigator.pop(context);
+}
+
 
   void _showFeelingIcons() {
     showDialog(
@@ -211,14 +220,6 @@ class _AddEditPageState extends State<AddEditPage> {
                         minLines: 5, // Minimum number of lines for the text field
                         maxLines: 20, // Maximum number of lines for the text field
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 5,
-                        child: IconButton(
-                          icon: Icon(_isListening ? Icons.mic : Icons.mic_none, color: Colors.white),
-                          onPressed: _listen,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -226,12 +227,7 @@ class _AddEditPageState extends State<AddEditPage> {
               const SizedBox(height: 190),
               ElevatedButton(
                 onPressed: () async {
-                  if (widget.id == null) {
-                    await _addDiary();
-                  } else {
-                    await _updateDiary(widget.id!);
-                  }
-                  Navigator.of(context).pop();
+                  await _saveDiary();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color.fromRGBO(125, 40, 253, 1), // Button background color
@@ -248,6 +244,7 @@ class _AddEditPageState extends State<AddEditPage> {
     );
   }
 }
+
 const List<Map<String, String>> _feelings = [
   {'feeling': 'Happy', 'gif': 'assets/happy.gif'},
   {'feeling': 'Loved', 'gif': 'assets/loved.gif'},
