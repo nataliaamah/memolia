@@ -26,6 +26,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerProviderStateMixin {
   late PageController _pageViewController;
+  late TabController _tabController;
   int _currentPageIndex = 0;
 
   Future<void> _completeOnboarding() async {
@@ -40,11 +41,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   void initState() {
     super.initState();
     _pageViewController = PageController();
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _pageViewController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -214,7 +217,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             );
           },
           child: Padding(
-            padding: EdgeInsets.only(right: 230), // Adjust horizontal padding as needed
+            padding: EdgeInsets.only(right: 240), // Adjust horizontal padding as needed
             child: Image.asset('assets/backArrow.png', height: 30, width: 30),
           ),
         )
@@ -256,7 +259,5 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
     ],
   );
 }
-
-
 
 }
