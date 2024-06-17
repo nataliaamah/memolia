@@ -48,11 +48,6 @@ class CustomNavigationBar extends StatelessWidget {
                   color: const Color.fromRGBO(14, 14, 37, 1),
                   onPressed: () => onTap(2),
                 ),
-                IconButton(
-                  icon: Icon(Icons.settings),
-                  color: const Color.fromRGBO(14, 14, 37, 1),
-                  onPressed: () => onTap(3),
-                ),
               ],
             ),
           ),

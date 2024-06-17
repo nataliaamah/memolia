@@ -152,9 +152,6 @@ class ProfilePage extends StatelessWidget {
                     case 2:
                       // Add your page navigation here
                       break;
-                    case 3:
-                      // Add your page navigation here
-                      break;
                   }
                 },
                 onAddLog: _navigateToAddEditPage,

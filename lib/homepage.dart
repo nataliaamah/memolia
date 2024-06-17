@@ -409,9 +409,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       );
                     }
                     break;
-                  case 3:
-                    // Handle Settings button press
-                    break;
                 }
               },
               onAddLog: () {
