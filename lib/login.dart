@@ -52,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       "Welcome to Memolia",
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: 29,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),

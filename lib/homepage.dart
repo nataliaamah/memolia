@@ -23,7 +23,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool _isLoading = true;
   String _filterOption = 'Today';
   DateTime? _selectedDate;
-  List<DateTime> _availableDates = [];
   User? user;
 
   @override
@@ -65,7 +64,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           }
         }).toList();
         _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
-        _availableDates = _diaries.map((diary) => diary['createdAt'] as DateTime).toSet().toList();
         _filterDiaries('Today');
         _isLoading = false;
       });
@@ -114,8 +112,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }).toList();
 
         _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
-
-        _availableDates = _diaries.map((diary) => diary['createdAt'] as DateTime).toSet().toList();
         _filterDiaries('Today');
         _isLoading = false;
       });
