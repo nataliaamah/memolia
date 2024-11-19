@@ -9,7 +9,7 @@ class AddEditPage extends StatefulWidget {
   final Map<String, dynamic>? existingDiary;
   final VoidCallback refreshDiaries;
 
-  AddEditPage({this.id, this.existingDiary, required this.refreshDiaries});
+  const AddEditPage({super.key, this.id, this.existingDiary, required this.refreshDiaries});
 
   @override
   _AddEditPageState createState() => _AddEditPageState();
@@ -83,10 +83,10 @@ class _AddEditPageState extends State<AddEditPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Select a Feeling'),
+        title: const Text('Select a Feeling'),
         content: GridView.builder(
           shrinkWrap: true,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 4,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
@@ -107,8 +107,8 @@ class _AddEditPageState extends State<AddEditPage> {
                 children: [
                   ColorFiltered(
                     colorFilter: _moodSelections[index]
-                        ? ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                        : ColorFilter.mode(Colors.grey, BlendMode.saturation),
+                        ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                        : const ColorFilter.mode(Colors.grey, BlendMode.saturation),
                     child: Image.asset(
                       _feelings[index]['gif']!,
                       width: 50,
@@ -132,10 +132,10 @@ class _AddEditPageState extends State<AddEditPage> {
       appBar: AppBar(
         title: Text(
           widget.id == null ? 'New Entry' : 'Edit Entry',
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
       ),
       body: SingleChildScrollView(
@@ -144,13 +144,13 @@ class _AddEditPageState extends State<AddEditPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 30,),
-              Text(
+              const SizedBox(height: 30,),
+              const Text(
                 "How Are You Feeling?",
                 style: TextStyle(color: Colors.white, fontSize: 20),
               ),
-              SizedBox(height: 20),
-              Container(
+              const SizedBox(height: 20),
+              SizedBox(
                 height: 100, // Adjust the height as needed
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -179,7 +179,7 @@ class _AddEditPageState extends State<AddEditPage> {
                             ),
                             Text(
                               _feelings[index]['feeling']!,
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ],
                         ),
@@ -189,7 +189,7 @@ class _AddEditPageState extends State<AddEditPage> {
                 ),
               ),
               const SizedBox(height: 30),
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   "Let's Vent About It",
@@ -208,7 +208,7 @@ class _AddEditPageState extends State<AddEditPage> {
                         enabled: _isMoodSelected,
                         decoration: InputDecoration(
                           hintText: 'Description',
-                          hintStyle: TextStyle(color: Colors.white54),
+                          hintStyle: const TextStyle(color: Colors.white54),
                           filled: true,
                           fillColor: Colors.black54,
                           border: OutlineInputBorder(
@@ -216,7 +216,7 @@ class _AddEditPageState extends State<AddEditPage> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                         minLines: 5, // Minimum number of lines for the text field
                         maxLines: 20, // Maximum number of lines for the text field
                       ),
@@ -230,11 +230,11 @@ class _AddEditPageState extends State<AddEditPage> {
                   await _saveDiary();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color.fromRGBO(125, 40, 253, 1), // Button background color
+                  backgroundColor: const Color.fromRGBO(125, 40, 253, 1), // Button background color
                 ),
                 child: Text(
                   widget.id == null ? 'Add Mood Log' : 'Update Mood Log',
-                  style: TextStyle(color: Colors.white, fontSize: 15), // Button text color
+                  style: const TextStyle(color: Colors.white, fontSize: 15), // Button text color
                 ),
               ),
             ],

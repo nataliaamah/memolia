@@ -5,6 +5,8 @@ import 'homepage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -24,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Stack(
         children: [
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF7D28FD), Color(0xFFA851F7)], // Purple gradient
                 begin: Alignment.topCenter,
@@ -36,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
             top: 40,
             left: 20,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () {
                 Navigator.pop(context);
               },
@@ -44,12 +46,12 @@ class _LoginPageState extends State<LoginPage> {
           ),
           Column(
             children: [
-              SizedBox(height: 300),
+              const SizedBox(height: 300),
               Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
                   children: [
-                    Text(
+                    const Text(
                       "Welcome to Memolia",
                       style: TextStyle(
                         fontSize: 29,
@@ -57,10 +59,10 @@ class _LoginPageState extends State<LoginPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     if (!_isLoginConfirmed)
                       _isSigningIn
-                          ? CircularProgressIndicator()
+                          ? const CircularProgressIndicator()
                           : ElevatedButton(
                               onPressed: () async {
                                 setState(() {
@@ -79,19 +81,19 @@ class _LoginPageState extends State<LoginPage> {
                                       _isLoginConfirmed = true;
                                     });
 
-                                    await Future.delayed(Duration(seconds: 3));
+                                    await Future.delayed(const Duration(seconds: 3));
 
                                     if (mounted) {
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(builder: (context) => HomePage()),
+                                        MaterialPageRoute(builder: (context) => const HomePage()),
                                       );
                                     }
                                   }
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF0E0E25), // Button color to match previous gradient color
+                                backgroundColor: const Color(0xFF0E0E25), // Button color to match previous gradient color
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -102,8 +104,8 @@ class _LoginPageState extends State<LoginPage> {
                                       'assets/google_logo.png',
                                       height: 24,
                                     ),
-                                    SizedBox(width: 12),
-                                    Text(
+                                    const SizedBox(width: 12),
+                                    const Text(
                                       'Sign in with Google',
                                       style: TextStyle(
                                         fontSize: 18,
@@ -125,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                               Image.asset('assets/sparkle.gif', height: 100),
                             ],
                           ),
-                          SizedBox(height: 30),
+                          const SizedBox(height: 30),
                           Text(
                             "Login Successful",
                             style: GoogleFonts.quicksand(

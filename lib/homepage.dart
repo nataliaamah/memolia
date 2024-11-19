@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -37,10 +37,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   String formatDateTime(DateTime dateTime) {
     final DateFormat formatter = DateFormat('EEE | dd MMM yy | HH:mm');
@@ -122,15 +118,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Notice'),
-        content: Text('Without logging in, your logs will only be saved on this device and not across devices.'),
+        title: const Text('Notice'),
+        content: const Text('Without logging in, your logs will only be saved on this device and not across devices.'),
         actions: <Widget>[
           TextButton(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.of(context).pop(),
           ),
           TextButton(
-            child: Text('Login'),
+            child: const Text('Login'),
             onPressed: () {
               Navigator.of(context).pop();
               Navigator.push(
@@ -295,20 +291,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     child: CircularProgressIndicator(),
                   )
                 : ListView(
-                    padding: EdgeInsets.only(bottom: 80),
+                    padding: const EdgeInsets.only(bottom: 80),
                     children: [
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Text(
                         'Welcome, ${user?.displayName?.split(' ')[0] ?? "User"}',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.quicksand(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
-                      Text(
+                      const Text(
                         "How are you feeling today?",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color.fromRGBO(243, 167, 18, 1)),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: SingleChildScrollView(
@@ -317,31 +313,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               FilterChip(
-                                label: Text('Today'),
+                                label: const Text('Today'),
                                 selected: _filterOption == 'Today',
                                 onSelected: (bool selected) {
                                   _filterDiaries('Today');
                                 },
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               FilterChip(
-                                label: Text('This Week'),
+                                label: const Text('This Week'),
                                 selected: _filterOption == 'This Week',
                                 onSelected: (bool selected) {
                                   _filterDiaries('This Week');
                                 },
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               FilterChip(
-                                label: Text('This Month'),
+                                label: const Text('This Month'),
                                 selected: _filterOption == 'This Month',
                                 onSelected: (bool selected) {
                                   _filterDiaries('This Month');
                                 },
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: 10),
                               FilterChip(
-                                label: Text('Select Date'),
+                                label: const Text('Select Date'),
                                 selected: _filterOption == 'Select Date',
                                 onSelected: (bool selected) {
                                   _selectDate();
@@ -351,9 +347,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       if (_filteredDiaries.isEmpty)
-                        Center(
+                        const Center(
                           child: Text(
                             'No logs today',
                             style: TextStyle(color: Colors.white),
@@ -364,15 +360,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           key: Key(diary['id']),
                           background: Container(
                             color: Colors.blue,
-                            child: Icon(Icons.edit, color: Colors.white),
                             alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.only(left: 20),
+                            padding: const EdgeInsets.only(left: 20),
+                            child: Icon(Icons.edit, color: Colors.white),
                           ),
                           secondaryBackground: Container(
                             color: Colors.red,
-                            child: Icon(Icons.delete, color: Colors.white),
                             alignment: Alignment.centerRight,
-                            padding: EdgeInsets.only(right: 20),
+                            padding: const EdgeInsets.only(right: 20),
+                            child: Icon(Icons.delete, color: Colors.white),
                           ),
                           confirmDismiss: (direction) async {
                             if (direction == DismissDirection.startToEnd) {
@@ -383,16 +379,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 context: context,
                                 builder: (BuildContext context) {
                                   return AlertDialog(
-                                    title: Text("Confirm"),
-                                    content: Text("Are you sure you wish to delete this item?"),
+                                    title: const Text("Confirm"),
+                                    content: const Text("Are you sure you wish to delete this item?"),
                                     actions: <Widget>[
                                       ElevatedButton(
                                           onPressed: () => Navigator.of(context).pop(true),
-                                          child: Text("DELETE")
+                                          child: const Text("DELETE")
                                       ),
                                       ElevatedButton(
                                         onPressed: () => Navigator.of(context).pop(false),
-                                        child: Text("CANCEL"),
+                                        child: const Text("CANCEL"),
                                       ),
                                     ],
                                   );
@@ -421,28 +417,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                       getImageForFeeling(diary['feeling']),
                                       Text(
                                         formatDateTime(diary['createdAt']),
-                                        style: TextStyle(fontSize: 10),
+                                        style: const TextStyle(fontSize: 10),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 8),
+                                  const SizedBox(height: 8),
                                   Text(
                                     diary['feeling'],
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     diary['description'].length > 50
                                         ? '${diary['description'].substring(0, 50)}...'
                                         : diary['description'],
-                                    style: TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ],
                               ),
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
           ),
@@ -486,15 +482,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Login Required'),
-        content: Text('You need to log in to view this page.'),
+        title: const Text('Login Required'),
+        content: const Text('You need to log in to view this page.'),
         actions: <Widget>[
           TextButton(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.of(context).pop(),
           ),
           TextButton(
-            child: Text('Login'),
+            child: const Text('Login'),
             onPressed: () {
               Navigator.of(context).pop();
               Navigator.push(

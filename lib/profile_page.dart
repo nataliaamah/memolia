@@ -7,6 +7,8 @@ import 'custom_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     User? user = FirebaseAuth.instance.currentUser;
@@ -15,7 +17,7 @@ class ProfilePage extends StatelessWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showLoginRequiredNotification(context));
     }
 
-    void _navigateToAddEditPage() {
+    void navigateToAddEditPage() {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -33,7 +35,7 @@ class ProfilePage extends StatelessWidget {
         centerTitle: true,
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0E0E25), Color(0xFF1C1C50)],
             begin: Alignment.topCenter,
@@ -47,7 +49,7 @@ class ProfilePage extends StatelessWidget {
               child: Text(
                 "Profile Page",
                 style: GoogleFonts.quicksand(
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 24,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -59,19 +61,19 @@ class ProfilePage extends StatelessWidget {
             Expanded(
               child: Center(
                 child: user == null
-                    ? Text(
+                    ? const Text(
                         'Please log in to view this page.',
                         style: TextStyle(color: Colors.white),
                       )
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          SizedBox(height: 50,),
-                          CircleAvatar(
+                          const SizedBox(height: 50,),
+                          const CircleAvatar(
                             radius: 50,
                             backgroundImage: AssetImage('assets/profile_pic.jpg'),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Text(
                             user.displayName ?? 'No Name',
                             style: GoogleFonts.quicksand(
@@ -80,7 +82,7 @@ class ProfilePage extends StatelessWidget {
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16.0), // Add padding around the container
                             child: Container(
@@ -93,22 +95,22 @@ class ProfilePage extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.person, size: 24, color: Colors.white),
-                                      SizedBox(width: 10),
+                                      const Icon(Icons.person, size: 24, color: Colors.white),
+                                      const SizedBox(width: 10),
                                       Text(
                                         user.displayName ?? 'No Name',
-                                        style: TextStyle(fontSize: 15.0, color: Colors.white),
+                                        style: const TextStyle(fontSize: 15.0, color: Colors.white),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 10),
+                                  const SizedBox(height: 10),
                                   Row(
                                     children: [
-                                      Icon(Icons.email, size: 24, color: Colors.white),
-                                      SizedBox(width: 10),
+                                      const Icon(Icons.email, size: 24, color: Colors.white),
+                                      const SizedBox(width: 10),
                                       Text(
                                         user.email ?? 'No Email',
-                                        style: TextStyle(fontSize: 15.0, color: Colors.white),
+                                        style: const TextStyle(fontSize: 15.0, color: Colors.white),
                                       ),
                                     ],
                                   ),
@@ -116,21 +118,21 @@ class ProfilePage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(height: 50),
+                          const SizedBox(height: 50),
                           ElevatedButton(
                             onPressed: () async {
                               await FirebaseAuth.instance.signOut();
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => HomePage()),
+                                MaterialPageRoute(builder: (context) => const HomePage()),
                               );
                             },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF7D28FD), // Button background color
+                            ),
                             child: Text(
                               'Logout',
                               style: TextStyle(color: Colors.black),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF7D28FD), // Button background color
                             ),
                           ),
                         ],
@@ -138,23 +140,23 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(left: 30, right: 30, bottom: 10),
+              padding: const EdgeInsets.only(left: 30, right: 30, bottom: 10),
               child: CustomNavigationBar(
                 currentIndex: 2,
                 onTap: (index) {
                   switch (index) {
                     case 0:
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage()));
                       break;
                     case 1:
-                      _navigateToAddEditPage();
+                      navigateToAddEditPage();
                       break;
                     case 2:
                       // Add your page navigation here
                       break;
                   }
                 },
-                onAddLog: _navigateToAddEditPage,
+                onAddLog: navigateToAddEditPage,
               ),
             ),
           ],
@@ -167,15 +169,15 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Login Required'),
-        content: Text('You need to log in to view this page.'),
+        title: const Text('Login Required'),
+        content: const Text('You need to log in to view this page.'),
         actions: <Widget>[
           TextButton(
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.of(context).pop(),
           ),
           TextButton(
-            child: Text('Login'),
+            child: const Text('Login'),
             onPressed: () {
               Navigator.of(context).pop();
               Navigator.push(

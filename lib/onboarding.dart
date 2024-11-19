@@ -6,6 +6,8 @@ import 'package:memolia/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Onboarding extends StatelessWidget {
+  const Onboarding({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,6 +22,8 @@ class Onboarding extends StatelessWidget {
 }
 
 class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
@@ -33,7 +37,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('seenOnboarding', true);
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => HomePage()),
+      MaterialPageRoute(builder: (context) => const HomePage()),
     );
   }
 
@@ -98,21 +102,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   Widget buildOnboardingOne(BuildContext context) {
     return SafeArea(
       child: Container(
-        color: Color.fromRGBO(57, 94, 102, 1),
+        color: const Color.fromRGBO(57, 94, 102, 1),
         width: double.maxFinite,
-        padding: EdgeInsets.symmetric(horizontal: 51, vertical: 92),
+        padding: const EdgeInsets.symmetric(horizontal: 51, vertical: 92),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Spacer(flex: 40),
+            const Spacer(flex: 40),
             Image.asset('assets/track.png', height: 300, width: 500),
             Text(
               "Keep Track of Your Emotions",
               textAlign: TextAlign.center,
-              style: GoogleFonts.quicksand(textStyle: TextStyle(fontSize: 30, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.w700)),
+              style: GoogleFonts.quicksand(textStyle: const TextStyle(fontSize: 30, color: Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.w700)),
             ),
-            Spacer(flex: 37),
-            SizedBox(height: 30),
+            const Spacer(flex: 37),
+            const SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.only(bottom: 30), // Adjust padding as needed
               child: SizedBox(
@@ -120,7 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                 child: SmoothPageIndicator(
                   controller: _pageViewController,
                   count: 2,
-                  effect: ExpandingDotsEffect(
+                  effect: const ExpandingDotsEffect(
                     activeDotColor: Color.fromARGB(255, 255, 255, 255),
                     dotHeight: 10,
                     dotWidth: 10,
@@ -138,21 +142,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
   Widget buildOnboardingTwo(BuildContext context) {
     return SafeArea(
       child: Container(
-        color: Color.fromRGBO(65, 93, 67, 1),
+        color: const Color.fromRGBO(65, 93, 67, 1),
         width: double.maxFinite,
-        padding: EdgeInsets.symmetric(horizontal: 51, vertical: 92),
+        padding: const EdgeInsets.symmetric(horizontal: 51, vertical: 92),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Spacer(flex: 40),
+            const Spacer(flex: 40),
             Image.asset('assets/control.png', height: 300, width: 500),
             Text(
               "Take Control Over Your Emotions",
               textAlign: TextAlign.center,
-              style: GoogleFonts.quicksand(textStyle: TextStyle(fontSize: 30, color: const Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.w700)),
+              style: GoogleFonts.quicksand(textStyle: const TextStyle(fontSize: 30, color: Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.w700)),
             ),
-            Spacer(flex: 37),
-            SizedBox(height: 30),
+            const Spacer(flex: 37),
+            const SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.only(bottom: 30), // Adjust padding as needed
               child: SizedBox(
@@ -160,7 +164,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
                 child: SmoothPageIndicator(
                   controller: _pageViewController,
                   count: 2,
-                  effect: ExpandingDotsEffect(
+                  effect: const ExpandingDotsEffect(
                     activeDotColor: Color.fromARGB(255, 255, 255, 255),
                     dotHeight: 10,
                     dotWidth: 10,
@@ -185,12 +189,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             });
             _pageViewController.animateToPage(
               _currentPageIndex,
-              duration: Duration(milliseconds: 250), // Sets duration to 300 milliseconds
+              duration: const Duration(milliseconds: 250), // Sets duration to 300 milliseconds
               curve: Curves.easeInOut,
             );
           },
           child: Padding(
-            padding: EdgeInsets.only(right: 50),
+            padding: const EdgeInsets.only(right: 50),
             child: Image.asset('assets/images/nextArrow.png', height: 30, width: 30),
           ),
         ),
@@ -212,17 +216,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             });
             _pageViewController.animateToPage(
               _currentPageIndex,
-              duration: Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
             );
           },
           child: Padding(
-            padding: EdgeInsets.only(right: 240), // Adjust horizontal padding as needed
+            padding: const EdgeInsets.only(right: 240), // Adjust horizontal padding as needed
             child: Image.asset('assets/backArrow.png', height: 30, width: 30),
           ),
         )
       else
-        SizedBox(width: 50), // Placeholder to maintain alignment
+        const SizedBox(width: 50), // Placeholder to maintain alignment
 
       if (_currentPageIndex < 1) // Show 'Next' button only on first and second screens
         GestureDetector(
@@ -232,12 +236,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             });
             _pageViewController.animateToPage(
               _currentPageIndex,
-              duration: Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
             );
           },
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust horizontal padding as needed
+            padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust horizontal padding as needed
             child: Image.asset('assets/nextArrow.png', height: 30, width: 30),
           ),
         )
@@ -247,14 +251,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => HomePage(),
+                builder: (context) => const HomePage(),
               ),
             );
           },
-          child: Text('Next', style: TextStyle(fontSize: 18, fontFamily: "Roboto", fontWeight: FontWeight.w400, color: Color.fromRGBO(255, 255, 255, 1))),
           style: TextButton.styleFrom(
-            padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust padding as needed
+            padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust padding as needed
           ),
+          child: Text('Next', style: TextStyle(fontSize: 18, fontFamily: "Roboto", fontWeight: FontWeight.w400, color: Color.fromRGBO(255, 255, 255, 1))),
         ),
     ],
   );
