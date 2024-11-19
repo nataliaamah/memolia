@@ -17,10 +17,9 @@ class AddEditPage extends StatefulWidget {
 
 class _AddEditPageState extends State<AddEditPage> {
   final TextEditingController _descriptionController = TextEditingController();
-
   String _selectedFeeling = '';
   bool _isMoodSelected = false;
-  List<bool> _moodSelections = List.filled(_feelings.length, false);
+  int _charCount = 0;
 
   @override
   void initState() {
@@ -28,9 +27,14 @@ class _AddEditPageState extends State<AddEditPage> {
     if (widget.existingDiary != null) {
       _selectedFeeling = widget.existingDiary!['feeling'];
       _descriptionController.text = widget.existingDiary!['description'];
+      _charCount = _descriptionController.text.length;
       _isMoodSelected = true;
-      _moodSelections[_feelings.indexWhere((element) => element['feeling'] == _selectedFeeling)] = true;
     }
+    _descriptionController.addListener(() {
+      setState(() {
+        _charCount = _descriptionController.text.length;
+      });
+    });
   }
 
   Future<void> _saveDiary() async {
@@ -45,19 +49,12 @@ class _AddEditPageState extends State<AddEditPage> {
   };
 
   if (FirebaseAuth.instance.currentUser == null) {
-    // Save locally if user is not logged in
     final prefs = await SharedPreferences.getInstance();
     List<Map<String, dynamic>> localDiaries = [];
     final String? localDiariesString = prefs.getString('localDiaries');
     if (localDiariesString != null) {
       final List<dynamic> decodedDiaries = jsonDecode(localDiariesString);
-      localDiaries = decodedDiaries.cast<Map<String, dynamic>>().map((diary) {
-        // Ensure 'createdAt' is parsed into DateTime
-        return {
-          ...diary,
-          'createdAt': diary['createdAt'], // Keep it as String
-        };
-      }).toList();
+      localDiaries = decodedDiaries.cast<Map<String, dynamic>>();
     }
     if (widget.id != null) {
       localDiaries.removeWhere((diary) => diary['id'] == widget.id);
@@ -66,11 +63,16 @@ class _AddEditPageState extends State<AddEditPage> {
     final String encodedDiaries = jsonEncode(localDiaries);
     await prefs.setString('localDiaries', encodedDiaries);
   } else {
-    // Save to Firebase if user is logged in
     if (widget.id == null) {
+      // Creating a new diary
       await FirebaseHelper.createDiary(_selectedFeeling, _descriptionController.text);
     } else {
-      await FirebaseHelper.updateDiary(widget.id!, _selectedFeeling, _descriptionController.text);
+      // Updating an existing diary
+      await FirebaseHelper.updateDiary(
+        widget.id!,                 // Diary ID
+        _selectedFeeling,           // Feeling
+        _descriptionController.text // Description
+      );
     }
   }
 
@@ -79,162 +81,119 @@ class _AddEditPageState extends State<AddEditPage> {
 }
 
 
-  void _showFeelingIcons() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Select a Feeling'),
-        content: GridView.builder(
-          shrinkWrap: true,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-          ),
-          itemCount: _feelings.length,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedFeeling = _feelings[index]['feeling']!;
-                  _isMoodSelected = true;
-                  _moodSelections = List.filled(_feelings.length, false);
-                  _moodSelections[index] = true;
-                });
-                Navigator.of(context).pop();
-              },
-              child: Column(
-                children: [
-                  ColorFiltered(
-                    colorFilter: _moodSelections[index]
-                        ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                        : const ColorFilter.mode(Colors.grey, BlendMode.saturation),
-                    child: Image.asset(
-                      _feelings[index]['gif']!,
-                      width: 50,
-                      height: 50,
-                    ),
-                  ),
-                  Text(_feelings[index]['feeling']!),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
+      backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: Text(
-          widget.id == null ? 'New Entry' : 'Edit Entry',
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: Text(widget.id == null ? 'New Entry' : 'Edit Entry', 
+        style: TextStyle(color: Color(0xFFA851F7)),),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color.fromRGBO(14, 14, 37, 1),
+        backgroundColor: const Color(0xFF121212),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 30,),
               const Text(
                 "How Are You Feeling?",
-                style: TextStyle(color: Colors.white, fontSize: 20),
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                height: 100, // Adjust the height as needed
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _feelings.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0), // Add padding between items
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedFeeling = _feelings[index]['feeling']!;
-                            _isMoodSelected = true;
-                            _moodSelections = List.filled(_feelings.length, false);
-                            _moodSelections[index] = true;
-                          });
-                        },
-                        child: Column(
-                          children: [
-                            Opacity(
-                              opacity: _moodSelections[index] ? 1.0 : 0.5, // Adjust opacity here
-                              child: Image.asset(
-                                _feelings[index]['gif']!,
-                                width: 50,
-                                height: 50,
-                              ),
-                            ),
-                            Text(
-                              _feelings[index]['feeling']!,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+              GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                 ),
+                itemCount: _feelings.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final feeling = _feelings[index]['feeling']!;
+                  final isSelected = _selectedFeeling == feeling;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedFeeling = feeling;
+                        _isMoodSelected = true;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.deepPurple : Colors.transparent,
+                          width: 2,
+                        ),
+                        color: isSelected ? Colors.deepPurple : Colors.transparent,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Colors.deepPurple.withOpacity(0.5),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                )
+                              ]
+                            : [],
+                      ),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        _feelings[index]['gif']!,
+                        width: 50,
+                        height: 50,
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 30),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Let's Vent About It",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
+              const Text(
+                "Write About It",
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: _isMoodSelected ? null : () {},
-                child: AbsorbPointer(
-                  absorbing: !_isMoodSelected,
-                  child: Stack(
-                    children: [
-                      TextField(
-                        controller: _descriptionController,
-                        enabled: _isMoodSelected,
-                        decoration: InputDecoration(
-                          hintText: 'Description',
-                          hintStyle: const TextStyle(color: Colors.white54),
-                          filled: true,
-                          fillColor: Colors.black54,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                        minLines: 5, // Minimum number of lines for the text field
-                        maxLines: 20, // Maximum number of lines for the text field
-                      ),
-                    ],
+              const SizedBox(height: 10),
+              TextField(
+                controller: _descriptionController,
+                maxLines: 5,
+                maxLength: 500,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: "Describe your mood...",
+                  hintStyle: const TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: const Color(0xFF1E1E1E),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
-              const SizedBox(height: 190),
-              ElevatedButton(
-                onPressed: () async {
-                  await _saveDiary();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(125, 40, 253, 1), // Button background color
-                ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
                 child: Text(
-                  widget.id == null ? 'Add Mood Log' : 'Update Mood Log',
-                  style: const TextStyle(color: Colors.white, fontSize: 15), // Button text color
+                  "$_charCount/500",
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _isMoodSelected ? _saveDiary : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  ),
+                  child: Text(widget.id == null ? "Add Mood Log" : "Update Mood Log"),
                 ),
               ),
             ],
@@ -253,5 +212,5 @@ const List<Map<String, String>> _feelings = [
   {'feeling': 'Tired', 'gif': 'assets/tired.gif'},
   {'feeling': 'Angry', 'gif': 'assets/angry.gif'},
   {'feeling': 'Annoyed', 'gif': 'assets/annoyed.gif'},
-  {'feeling': 'Other', 'gif': 'assets/unknown.gif'}
+  {'feeling': 'Other', 'gif': 'assets/unknown.gif'},
 ];
