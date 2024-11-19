@@ -38,58 +38,56 @@ class _AddEditPageState extends State<AddEditPage> {
   }
 
   Future<void> _saveDiary() async {
-  final DateTime now = DateTime.now();
-  final String createdAt = now.toIso8601String();
+    final DateTime now = DateTime.now();
+    final String createdAt = now.toIso8601String();
 
-  final newDiary = {
-    'id': widget.id ?? now.toString(),
-    'feeling': _selectedFeeling,
-    'description': _descriptionController.text,
-    'createdAt': createdAt,
-  };
+    final newDiary = {
+      'id': widget.id ?? now.toString(),
+      'feeling': _selectedFeeling,
+      'description': _descriptionController.text,
+      'createdAt': createdAt,
+    };
 
-  if (FirebaseAuth.instance.currentUser == null) {
-    final prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> localDiaries = [];
-    final String? localDiariesString = prefs.getString('localDiaries');
-    if (localDiariesString != null) {
-      final List<dynamic> decodedDiaries = jsonDecode(localDiariesString);
-      localDiaries = decodedDiaries.cast<Map<String, dynamic>>();
-    }
-    if (widget.id != null) {
-      localDiaries.removeWhere((diary) => diary['id'] == widget.id);
-    }
-    localDiaries.add(newDiary);
-    final String encodedDiaries = jsonEncode(localDiaries);
-    await prefs.setString('localDiaries', encodedDiaries);
-  } else {
-    if (widget.id == null) {
-      // Creating a new diary
-      await FirebaseHelper.createDiary(_selectedFeeling, _descriptionController.text);
+    if (FirebaseAuth.instance.currentUser == null) {
+      final prefs = await SharedPreferences.getInstance();
+      List<Map<String, dynamic>> localDiaries = [];
+      final String? localDiariesString = prefs.getString('localDiaries');
+      if (localDiariesString != null) {
+        final List<dynamic> decodedDiaries = jsonDecode(localDiariesString);
+        localDiaries = decodedDiaries.cast<Map<String, dynamic>>();
+      }
+      if (widget.id != null) {
+        localDiaries.removeWhere((diary) => diary['id'] == widget.id);
+      }
+      localDiaries.add(newDiary);
+      final String encodedDiaries = jsonEncode(localDiaries);
+      await prefs.setString('localDiaries', encodedDiaries);
     } else {
-      // Updating an existing diary
-      await FirebaseHelper.updateDiary(
-        widget.id!,                 // Diary ID
-        _selectedFeeling,           // Feeling
-        _descriptionController.text // Description
-      );
+      if (widget.id == null) {
+        // Creating a new diary
+        await FirebaseHelper.createDiary(_selectedFeeling, _descriptionController.text);
+      } else {
+        // Updating an existing diary
+        await FirebaseHelper.updateDiary(
+          widget.id!,                 // Diary ID
+          _selectedFeeling,           // Feeling
+          _descriptionController.text // Description
+        );
+      }
     }
+
+    widget.refreshDiaries();
+    Navigator.pop(context);
   }
-
-  widget.refreshDiaries();
-  Navigator.pop(context);
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: Text(widget.id == null ? 'New Entry' : 'Edit Entry', 
-        style: TextStyle(color: Color(0xFFA851F7)),),
+        title: Text(widget.id == null ? 'New Entry' : 'Edit Entry'),
         centerTitle: true,
-        backgroundColor: const Color(0xFF121212),
+        backgroundColor: const Color(0xFF1E1E1E),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -163,7 +161,7 @@ class _AddEditPageState extends State<AddEditPage> {
               TextField(
                 controller: _descriptionController,
                 maxLines: 5,
-                maxLength: 500,
+                // Removed maxLength to avoid built-in word counter
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: "Describe your mood...",
@@ -180,7 +178,7 @@ class _AddEditPageState extends State<AddEditPage> {
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  "$_charCount/500",
+                  "$_charCount/500", // Single custom word counter
                   style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ),
