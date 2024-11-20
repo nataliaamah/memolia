@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'profile_page.dart';
-import 'addeditpage.dart';
-import 'login.dart';
 import 'package:intl/intl.dart';
-import 'custom_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'firebase_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+import 'custom_navigation_bar.dart';
+import 'firebase_helper.dart'; // Adjust this import to match your file structure
+import 'profile_page.dart';
+import 'login.dart';
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -37,12 +37,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
-
-  String formatDateTime(DateTime dateTime) {
-    final DateFormat formatter = DateFormat('EEE | dd MMM yy | HH:mm');
-    return formatter.format(dateTime);
-  }
-
   Future<void> _loadLocalDiaries() async {
     final prefs = await SharedPreferences.getInstance();
     final String? localDiaries = prefs.getString('localDiaries');
@@ -50,183 +44,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       final List<dynamic> decodedDiaries = jsonDecode(localDiaries);
       setState(() {
         _diaries = decodedDiaries.cast<Map<String, dynamic>>().map((diary) {
-          if (diary['createdAt'] is String) {
-            return {
-              ...diary,
-              'createdAt': DateTime.parse(diary['createdAt']),
-            };
-          } else {
-            return diary;
-          }
+          diary['createdAt'] = DateTime.parse(diary['createdAt']);
+          return diary;
         }).toList();
-        _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
         _filterDiaries('Today');
         _isLoading = false;
       });
     } else {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _saveLocalDiaries() async {
-  final prefs = await SharedPreferences.getInstance();
-
-  // Convert DateTime objects to ISO 8601 strings
-  List<Map<String, dynamic>> diariesJson = _diaries.map((diary) {
-    return {
-      'id': diary['id'],
-      'feeling': diary['feeling'],
-      'description': diary['description'],
-      'createdAt': diary['createdAt'].toIso8601String(), // Convert DateTime to ISO 8601 string
-    };
-  }).toList();
-
-  final String encodedDiaries = jsonEncode(diariesJson);
-  await prefs.setString('localDiaries', encodedDiaries);
-}
-
-  void _refreshDiaries() async {
+  Future<void> _refreshDiaries() async {
     if (user == null) {
       _loadLocalDiaries();
       return;
     }
-
     final data = await FirebaseHelper.getDiaries();
-    if (mounted) {
-      setState(() {
-        _diaries = data.map((diary) {
-          if (diary['createdAt'] is String) {
-            return {
-              ...diary,
-              'createdAt': DateTime.parse(diary['createdAt']),
-            };
-          } else {
-            return diary;
-          }
-        }).toList();
-
-        _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
-        _filterDiaries('Today');
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _showLocalStorageNotification() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Notice'),
-        content: const Text('Without logging in, your logs will only be saved on this device and not across devices.'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          TextButton(
-            child: const Text('Login'),
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _navigateToAddEditPage({String? id}) async {
-  if (id != null) {
-    final existingDiary = _diaries.firstWhere((element) => element['id'] == id);
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddEditPage(
-          id: id,
-          existingDiary: existingDiary,
-          refreshDiaries: _refreshDiaries,
-        ),
-      ),
-    );
-  } else {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddEditPage(
-          refreshDiaries: _refreshDiaries,
-        ),
-      ),
-    );
-  }
-  if (user == null) {
-    _saveLocalDiaries(); // Save to local storage after adding or editing
-  }
-  _refreshDiaries();
-}
-
-
-  void _deleteDiary(String id) async {
-    if (user == null) {
-      setState(() {
-        _diaries.removeWhere((diary) => diary['id'] == id);
-        _saveLocalDiaries();
-      });
-    } else {
-      await FirebaseHelper.deleteDiary(id);
-    }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Successfully deleted a diary!'),
-    ));
-    _refreshDiaries();
-  }
-
-  Widget getImageForFeeling(String feeling) {
-    switch (feeling) {
-      case 'Happy':
-        return Image.asset('assets/happy.gif', width: 24, height: 24);
-      case 'Loved':
-        return Image.asset('assets/loved.gif', width: 24, height: 24);
-      case 'Excited':
-        return Image.asset('assets/excited.gif', width: 24, height: 24);
-      case 'Sad':
-        return Image.asset('assets/sad.gif', width: 24, height: 24);
-      case 'Tired':
-        return Image.asset('assets/tired.gif', width: 24, height: 24);
-      case 'Angry':
-        return Image.asset('assets/angry.gif', width: 24, height: 24);
-      case 'Annoyed':
-        return Image.asset('assets/annoyed.gif', width: 24, height: 24);
-      case 'Other':
-      default:
-        return Image.asset('assets/unknown.gif', width: 24, height: 24);
-    }
-  }
-
-  Color getColorForFeeling(String feeling) {
-    switch (feeling) {
-      case 'Happy':
-        return Colors.yellow[100]!;
-      case 'Loved':
-        return Colors.pink[100]!;
-      case 'Excited':
-        return Colors.orange[100]!;
-      case 'Sad':
-        return Colors.blue[100]!;
-      case 'Tired':
-        return Colors.grey[100]!;
-      case 'Angry':
-        return Colors.red[100]!;
-      case 'Annoyed':
-        return Colors.brown[100]!;
-      case 'Other':
-      default:
-        return Colors.green[100]!;
-    }
+    setState(() {
+      _diaries = data.map((diary) {
+        diary['createdAt'] = DateTime.parse(diary['createdAt']);
+        return diary;
+      }).toList();
+      _filterDiaries('Today');
+      _isLoading = false;
+    });
   }
 
   void _filterDiaries(String option) {
@@ -256,19 +98,201 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  void _selectDate() async {
-    DateTime? pickedDate = await showDatePicker(
+  void _showLocalStorageNotification() {
+    showDialog(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2101),
+      builder: (context) => AlertDialog(
+        title: const Text('Notice'),
+        content: const Text('Without logging in, your logs will only be saved on this device.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+            },
+            child: const Text('Login'),
+          ),
+        ],
+      ),
     );
-    if (pickedDate != null) {
-      setState(() {
-        _selectedDate = pickedDate;
-        _filterDiaries('Select Date');
-      });
+  }
+
+  void _showAddEditModal({Map<String, dynamic>? existingDiary}) {
+    String selectedEmotion = existingDiary?['feeling'] ?? '';
+    TextEditingController descriptionController = TextEditingController(
+      text: existingDiary?['description'] ?? "",
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.6,
+        maxChildSize: 1.0,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF121212),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[700],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Icon(Icons.bookmark_border, color: Colors.white),
+                  Text(
+                    existingDiary == null ? "New Entry" : "Edit Entry",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      _saveDiary(
+                        existingDiary,
+                        descriptionController.text,
+                        selectedEmotion,
+                      );
+                    },
+                    child: const Text(
+                      "Save",
+                      style: TextStyle(
+                        color: Colors.deepPurple,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "How are you feeling?",
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                ),
+                itemCount: _feelings.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final feeling = _feelings[index]['feeling']!;
+                  final isSelected = selectedEmotion == feeling;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedEmotion = feeling;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.deepPurple : Colors.transparent,
+                          width: 2,
+                        ),
+                        color: isSelected ? Colors.deepPurple : Colors.transparent,
+                      ),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        _feelings[index]['gif']!,
+                        width: 50,
+                        height: 50,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Write About It",
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: TextField(
+                  controller: descriptionController,
+                  maxLines: null,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: "Start writing...",
+                    hintStyle: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 16,
+                    ),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveDiary(Map<String, dynamic>? existingDiary, String description, String emotion) async {
+    final now = DateTime.now();
+    final diary = {
+      'id': existingDiary?['id'] ?? now.toString(),
+      'feeling': emotion,
+      'description': description,
+      'createdAt': now.toIso8601String(),
+    };
+
+    if (FirebaseAuth.instance.currentUser == null) {
+      final prefs = await SharedPreferences.getInstance();
+      List<Map<String, dynamic>> localDiaries = [];
+      final String? localDiariesString = prefs.getString('localDiaries');
+      if (localDiariesString != null) {
+        localDiaries = (jsonDecode(localDiariesString) as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+      }
+      if (existingDiary != null) {
+        localDiaries.removeWhere((diary) => diary['id'] == existingDiary['id']);
+      }
+      localDiaries.add(diary);
+      await prefs.setString('localDiaries', jsonEncode(localDiaries));
+    } else {
+      if (existingDiary == null) {
+        await FirebaseHelper.createDiary(emotion, description);
+      } else {
+        await FirebaseHelper.updateDiary(existingDiary['id'], emotion, description);
+      }
     }
+
+    _refreshDiaries();
+    Navigator.pop(context);
   }
 
   @override
@@ -283,13 +307,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: Stack(
         children: [
           RefreshIndicator(
-            onRefresh: () async {
-              _refreshDiaries();
-            },
+            onRefresh: _refreshDiaries,
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : ListView(
                     padding: const EdgeInsets.only(bottom: 80),
                     children: [
@@ -297,12 +317,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       Text(
                         'Welcome, ${user?.displayName?.split(' ')[0] ?? "User"}',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.quicksand(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: GoogleFonts.quicksand(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      const Text(
+                                            const Text(
                         "How are you feeling today?",
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color.fromRGBO(243, 167, 18, 1)),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromRGBO(243, 167, 18, 1),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Padding(
@@ -329,14 +357,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               ),
                               const SizedBox(width: 10),
                               FilterChip(
-                                label: const Text('This Month'),
-                                selected: _filterOption == 'This Month',
-                                onSelected: (bool selected) {
-                                  _filterDiaries('This Month');
-                                },
-                              ),
-                              const SizedBox(width: 10),
-                              FilterChip(
                                 label: const Text('Select Date'),
                                 selected: _filterOption == 'Select Date',
                                 onSelected: (bool selected) {
@@ -351,7 +371,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       if (_filteredDiaries.isEmpty)
                         const Center(
                           child: Text(
-                            'No logs today',
+                            'No logs found.',
                             style: TextStyle(color: Colors.white),
                           ),
                         ),
@@ -362,17 +382,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             color: Colors.blue,
                             alignment: Alignment.centerLeft,
                             padding: const EdgeInsets.only(left: 20),
-                            child: Icon(Icons.edit, color: Colors.white),
+                            child: const Icon(Icons.edit, color: Colors.white),
                           ),
                           secondaryBackground: Container(
                             color: Colors.red,
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 20),
-                            child: Icon(Icons.delete, color: Colors.white),
+                            child: const Icon(Icons.delete, color: Colors.white),
                           ),
                           confirmDismiss: (direction) async {
                             if (direction == DismissDirection.startToEnd) {
-                              _navigateToAddEditPage(id: diary['id']);
+                              _showAddEditModal(existingDiary: diary);
                               return false;
                             } else if (direction == DismissDirection.endToStart) {
                               final bool res = await showDialog(
@@ -380,11 +400,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                 builder: (BuildContext context) {
                                   return AlertDialog(
                                     title: const Text("Confirm"),
-                                    content: const Text("Are you sure you wish to delete this item?"),
+                                    content: const Text("Are you sure you wish to delete this entry?"),
                                     actions: <Widget>[
                                       ElevatedButton(
-                                          onPressed: () => Navigator.of(context).pop(true),
-                                          child: const Text("DELETE")
+                                        onPressed: () => Navigator.of(context).pop(true),
+                                        child: const Text("DELETE"),
                                       ),
                                       ElevatedButton(
                                         onPressed: () => Navigator.of(context).pop(false),
@@ -400,11 +420,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           },
                           onDismissed: (direction) {
                             if (direction == DismissDirection.endToStart) {
-                              _deleteDiary(diary['id']);
+                              _diaries.removeWhere((d) => d['id'] == diary['id']);
+                              if (user == null) {
+                                _saveLocalDiaries();
+                              }
+                              _refreshDiaries();
                             }
                           },
                           child: Card(
-                            color: getColorForFeeling(diary['feeling']),
+                            color: const Color.fromRGBO(100, 110, 240, 1),
                             margin: const EdgeInsets.all(10),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -414,31 +438,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      getImageForFeeling(diary['feeling']),
+                                      Text(
+                                        diary['feeling'] ?? '',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                                       Text(
                                         formatDateTime(diary['createdAt']),
-                                        style: const TextStyle(fontSize: 10),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white70,
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 5),
                                   Text(
-                                    diary['feeling'],
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    diary['description'].length > 50
-                                        ? '${diary['description'].substring(0, 50)}...'
-                                        : diary['description'],
-                                    style: const TextStyle(fontSize: 14),
+                                    diary['description'] ?? '',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
                         );
-                      }),
+                      }).toList(),
                     ],
                   ),
           ),
@@ -451,25 +481,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               onTap: (index) {
                 switch (index) {
                   case 0:
-                    // Handle Home button press
+                    // Already on Home, do nothing
                     break;
                   case 1:
-                    _navigateToAddEditPage();
+                    _showAddEditModal(); // Show the modal for adding a new diary entry
                     break;
                   case 2:
                     if (user == null) {
-                      _showLoginRequiredNotification();
+                      _showLocalStorageNotification();
                     } else {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => ProfilePage()),
+                        MaterialPageRoute(builder: (context) => const ProfilePage()),
                       );
                     }
                     break;
                 }
               },
               onAddLog: () {
-                _navigateToAddEditPage();
+                _showAddEditModal();
               },
             ),
           ),
@@ -478,29 +508,50 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _showLoginRequiredNotification() {
-    showDialog(
+  Future<void> _saveLocalDiaries() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<Map<String, dynamic>> diariesJson = _diaries.map((diary) {
+      return {
+        'id': diary['id'],
+        'feeling': diary['feeling'],
+        'description': diary['description'],
+        'createdAt': diary['createdAt'].toIso8601String(),
+      };
+    }).toList();
+
+    final String encodedDiaries = jsonEncode(diariesJson);
+    await prefs.setString('localDiaries', encodedDiaries);
+  }
+
+  String formatDateTime(DateTime dateTime) {
+    final DateFormat formatter = DateFormat('EEE, dd MMM yy, HH:mm');
+    return formatter.format(dateTime);
+  }
+
+  void _selectDate() async {
+    DateTime? pickedDate = await showDatePicker(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Login Required'),
-        content: const Text('You need to log in to view this page.'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          TextButton(
-            child: const Text('Login'),
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
-            },
-          ),
-        ],
-      ),
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
     );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+        _filterDiaries('Select Date');
+      });
+    }
   }
 }
+
+const List<Map<String, String>> _feelings = [
+  {'feeling': 'Happy', 'gif': 'assets/happy.gif'},
+  {'feeling': 'Loved', 'gif': 'assets/loved.gif'},
+  {'feeling': 'Excited', 'gif': 'assets/excited.gif'},
+  {'feeling': 'Sad', 'gif': 'assets/sad.gif'},
+  {'feeling': 'Tired', 'gif': 'assets/tired.gif'},
+  {'feeling': 'Angry', 'gif': 'assets/angry.gif'},
+  {'feeling': 'Annoyed', 'gif': 'assets/annoyed.gif'},
+  {'feeling': 'Other', 'gif': 'assets/unknown.gif'},
+];
+
