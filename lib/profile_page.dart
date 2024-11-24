@@ -130,7 +130,7 @@ class ProfilePage extends StatelessWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF7D28FD), // Button background color
                             ),
-                            child: Text(
+                            child: const Text(
                               'Logout',
                               style: TextStyle(color: Colors.black),
                             ),
@@ -182,7 +182,7 @@ class ProfilePage extends StatelessWidget {
               Navigator.of(context).pop();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
+                MaterialPageRoute(builder: (context) => const LoginPage()),
               );
             },
           ),

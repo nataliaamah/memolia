@@ -11,7 +11,7 @@ class Onboarding extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
+      home: const Scaffold(
         body: OnboardingScreen(),
       ),
       theme: ThemeData(
@@ -258,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> with SingleTickerPr
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20), // Adjust padding as needed
           ),
-          child: Text('Next', style: TextStyle(fontSize: 18, fontFamily: "Roboto", fontWeight: FontWeight.w400, color: Color.fromRGBO(255, 255, 255, 1))),
+          child: const Text('Next', style: TextStyle(fontSize: 18, fontFamily: "Roboto", fontWeight: FontWeight.w400, color: Color.fromRGBO(255, 255, 255, 1))),
         ),
     ],
   );

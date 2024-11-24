@@ -11,7 +11,7 @@ import 'profile_page.dart';
 import 'login.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -122,144 +122,194 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _showAddEditModal({Map<String, dynamic>? existingDiary}) {
-    String selectedEmotion = existingDiary?['feeling'] ?? '';
-    TextEditingController descriptionController = TextEditingController(
-      text: existingDiary?['description'] ?? "",
-    );
+  String selectedEmotion = existingDiary?['feeling'] ?? '';
+  TextEditingController descriptionController = TextEditingController(
+    text: existingDiary?['description'] ?? "",
+  );
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.6,
-        maxChildSize: 1.0,
-        builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF121212),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[700],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => StatefulBuilder(
+      builder: (BuildContext context, StateSetter modalSetState) {
+        return FractionallySizedBox(
+          heightFactor: 0.85,
+          child: GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(), // Dismiss keyboard on tap outside
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF121212),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Icon(Icons.bookmark_border, color: Colors.white),
-                  Text(
-                    existingDiary == null ? "New Entry" : "Edit Entry",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      _saveDiary(
-                        existingDiary,
-                        descriptionController.text,
-                        selectedEmotion,
-                      );
-                    },
-                    child: const Text(
-                      "Save",
-                      style: TextStyle(
-                        color: Colors.deepPurple,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "How are you feeling?",
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              const SizedBox(height: 10),
-              GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: _feelings.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  final feeling = _feelings[index]['feeling']!;
-                  final isSelected = selectedEmotion == feeling;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedEmotion = feeling;
-                      });
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected ? Colors.deepPurple : Colors.transparent,
-                          width: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.only(top: 10, bottom: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[700],
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        color: isSelected ? Colors.deepPurple : Colors.transparent,
-                      ),
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        _feelings[index]['gif']!,
-                        width: 50,
-                        height: 50,
                       ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Write About It",
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: TextField(
-                  controller: descriptionController,
-                  maxLines: null,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: "Start writing...",
-                    hintStyle: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 16,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Icon(Icons.bookmark_border, color: Colors.white),
+                        Text(
+                          existingDiary == null ? "New Entry" : "Edit Entry",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            _saveDiary(
+                              existingDiary,
+                              descriptionController.text,
+                              selectedEmotion,
+                            );
+                          },
+                          child: const Text(
+                            "Save",
+                            style: TextStyle(
+                              color: Colors.deepPurple,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    border: InputBorder.none,
-                  ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "How are you feeling?",
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                              ),
+                              itemCount: _feelings.length,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                final feeling = _feelings[index]['feeling']!;
+                                final isSelected = selectedEmotion == feeling;
+                                return GestureDetector(
+                                  onTap: () {
+                                    modalSetState(() {
+                                      selectedEmotion = feeling;
+                                    });
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Colors.deepPurple
+                                            : Colors.transparent,
+                                        width: 2,
+                                      ),
+                                      color: isSelected
+                                          ? Colors.deepPurple
+                                          : Colors.transparent,
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: Colors.deepPurple
+                                                    .withOpacity(0.5),
+                                                blurRadius: 10,
+                                                spreadRadius: 2,
+                                              )
+                                            ]
+                                          : [],
+                                    ),
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Image.asset(
+                                      _feelings[index]['gif']!,
+                                      width: 50,
+                                      height: 50,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              "Write About It",
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 18),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: descriptionController,
+                              maxLines: null,
+                              maxLength: 500,
+                              onChanged: (text) {
+                                modalSetState(() {});
+                              },
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: "Start writing...",
+                                hintStyle: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 16,
+                                ),
+                                border: InputBorder.none,
+                                counterText: "",
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Text(
+                                "${descriptionController.text.length}/500",
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
+        );
+      },
+    ),
+  );
+}
+
+
 
   Future<void> _saveDiary(Map<String, dynamic>? existingDiary, String description, String emotion) async {
     final now = DateTime.now();
@@ -323,7 +373,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           color: Colors.white,
                         ),
                       ),
-                                            const Text(
+                      const Text(
                         "How are you feeling today?",
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -468,7 +518,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
           ),

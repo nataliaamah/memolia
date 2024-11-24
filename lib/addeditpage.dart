@@ -10,11 +10,11 @@ class AddEditPage extends StatelessWidget {
   final VoidCallback refreshDiaries;
 
   const AddEditPage({
-    Key? key,
+    super.key,
     this.id,
     this.existingDiary,
     required this.refreshDiaries,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,7 @@ class AddEditPage extends StatelessWidget {
       text: existingDiary?['description'] ?? "",
     );
 
-    void _saveDiary() async {
+    void saveDiary() async {
       final now = DateTime.now();
       final diary = {
         'id': id ?? now.toString(),
@@ -100,7 +100,7 @@ class AddEditPage extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: _saveDiary,
+                  onTap: saveDiary,
                   child: const Text(
                     "Save",
                     style: TextStyle(

@@ -7,7 +7,7 @@ import 'onboarding.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
         fontFamily: 'Roboto',
       ),
-      home: LandingPage(),
+      home: const LandingPage(),
     );
   }
 }
@@ -56,7 +56,7 @@ class _LandingPageState extends State<LandingPage> {
     if (_seenOnboarding) {
       return const HomePage();
     } else {
-      return Onboarding();
+      return const Onboarding();
     }
   }
 }
