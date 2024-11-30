@@ -309,6 +309,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   );
 }
 
+  Future<void> _saveLocalDiaries() async {
+  final prefs = await SharedPreferences.getInstance();
+  List<Map<String, dynamic>> diariesJson = _diaries.map((diary) {
+    return {
+      'id': diary['id'],
+      'feeling': diary['feeling'],
+      'description': diary['description'],
+      'createdAt': diary['createdAt'].toIso8601String(),
+    };
+  }).toList();
+
+  final String encodedDiaries = jsonEncode(diariesJson);
+  await prefs.setString('localDiaries', encodedDiaries);
+}
+
+void _selectDate() async {
+  DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: DateTime.now(),
+    firstDate: DateTime(2020),
+    lastDate: DateTime(2101),
+  );
+  if (pickedDate != null) {
+    setState(() {
+      _selectedDate = pickedDate;
+      _filterDiaries('Select Date');
+    });
+  }
+}
 
 
   Future<void> _saveDiary(Map<String, dynamic>? existingDiary, String description, String emotion) async {
@@ -318,6 +347,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       'feeling': emotion,
       'description': description,
       'createdAt': now.toIso8601String(),
+      'isLocked': true, // Mark as locked if saved via lock icon
     };
 
     if (FirebaseAuth.instance.currentUser == null) {
@@ -343,6 +373,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     _refreshDiaries();
     Navigator.pop(context);
+  }
+
+  String formatDateTime(DateTime dateTime) {
+    final DateFormat formatter = DateFormat('EEE, dd MMM yy, HH:mm');
+    return formatter.format(dateTime);
   }
 
   @override
@@ -557,41 +592,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-
-  Future<void> _saveLocalDiaries() async {
-    final prefs = await SharedPreferences.getInstance();
-    List<Map<String, dynamic>> diariesJson = _diaries.map((diary) {
-      return {
-        'id': diary['id'],
-        'feeling': diary['feeling'],
-        'description': diary['description'],
-        'createdAt': diary['createdAt'].toIso8601String(),
-      };
-    }).toList();
-
-    final String encodedDiaries = jsonEncode(diariesJson);
-    await prefs.setString('localDiaries', encodedDiaries);
-  }
-
-  String formatDateTime(DateTime dateTime) {
-    final DateFormat formatter = DateFormat('EEE, dd MMM yy, HH:mm');
-    return formatter.format(dateTime);
-  }
-
-  void _selectDate() async {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2101),
-    );
-    if (pickedDate != null) {
-      setState(() {
-        _selectedDate = pickedDate;
-        _filterDiaries('Select Date');
-      });
-    }
-  }
 }
 
 const List<Map<String, String>> _feelings = [
@@ -604,4 +604,3 @@ const List<Map<String, String>> _feelings = [
   {'feeling': 'Annoyed', 'gif': 'assets/annoyed.gif'},
   {'feeling': 'Other', 'gif': 'assets/unknown.gif'},
 ];
-
