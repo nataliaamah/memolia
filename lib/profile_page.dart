@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'homepage.dart';
 import 'login.dart';
-import 'addeditpage.dart';
 import 'custom_navigation_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,13 +16,11 @@ class ProfilePage extends StatelessWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) => _showLoginRequiredNotification(context));
     }
 
-    void navigateToAddEditPage() {
+    void navigateToMainPage() {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AddEditPage(
-            refreshDiaries: () {},
-          ),
+          builder: (context) => const HomePage(),  // Navigate to MainPage
         ),
       );
     }
@@ -62,81 +59,81 @@ class ProfilePage extends StatelessWidget {
               child: Center(
                 child: user == null
                     ? const Text(
-                        'Please log in to view this page.',
-                        style: TextStyle(color: Colors.white),
-                      )
+                  'Please log in to view this page.',
+                  style: TextStyle(color: Colors.white),
+                )
                     : Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 50,),
-                          const CircleAvatar(
-                            radius: 50,
-                            backgroundImage: AssetImage('assets/profile_pic.jpg'),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            user.displayName ?? 'No Name',
-                            style: GoogleFonts.quicksand(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0), // Add padding around the container
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black45,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.person, size: 24, color: Colors.white),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        user.displayName ?? 'No Name',
-                                        style: const TextStyle(fontSize: 15.0, color: Colors.white),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.email, size: 24, color: Colors.white),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        user.email ?? 'No Email',
-                                        style: const TextStyle(fontSize: 15.0, color: Colors.white),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 50),
-                          ElevatedButton(
-                            onPressed: () async {
-                              await FirebaseAuth.instance.signOut();
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => const HomePage()),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF7D28FD), // Button background color
-                            ),
-                            child: const Text(
-                              'Logout',
-                              style: TextStyle(color: Colors.black),
-                            ),
-                          ),
-                        ],
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 50),
+                    const CircleAvatar(
+                      radius: 50,
+                      backgroundImage: AssetImage('assets/profile_pic.jpg'),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      user.displayName ?? 'No Name',
+                      style: GoogleFonts.quicksand(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0), // Add padding around the container
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black45,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.person, size: 24, color: Colors.white),
+                                const SizedBox(width: 10),
+                                Text(
+                                  user.displayName ?? 'No Name',
+                                  style: const TextStyle(fontSize: 15.0, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                const Icon(Icons.email, size: 24, color: Colors.white),
+                                const SizedBox(width: 10),
+                                Text(
+                                  user.email ?? 'No Email',
+                                  style: const TextStyle(fontSize: 15.0, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomePage()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7D28FD), // Button background color
+                      ),
+                      child: const Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Padding(
@@ -149,14 +146,14 @@ class ProfilePage extends StatelessWidget {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage()));
                       break;
                     case 1:
-                      navigateToAddEditPage();
+                      navigateToMainPage();  // Navigate to MainPage instead of AddEditPage
                       break;
                     case 2:
-                      // Add your page navigation here
+                    // Add your page navigation here
                       break;
                   }
                 },
-                onAddLog: navigateToAddEditPage,
+                onAddLog: navigateToMainPage,  // Navigate to MainPage for adding logs
               ),
             ),
           ],

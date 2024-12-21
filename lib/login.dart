@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'homepage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +15,14 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   bool _isSigningIn = false;
   bool _isLoginConfirmed = false;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: '911904224271-lp2ectdmvk1tdnkldvbokpf12932ta36.apps.googleusercontent.com',
+    scopes: [
+      'email',
+      'profile',
+    ],
+  );
 
   @override
   void dispose() {
@@ -64,58 +73,58 @@ class _LoginPageState extends State<LoginPage> {
                       _isSigningIn
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
-                              onPressed: () async {
-                                setState(() {
-                                  _isSigningIn = true;
-                                });
+                        onPressed: () async {
+                          setState(() {
+                            _isSigningIn = true;
+                          });
 
-                                User? user = await signInWithGoogle();
+                          User? user = await signInWithGoogle();
 
-                                if (mounted) {
-                                  setState(() {
-                                    _isSigningIn = false;
-                                  });
+                          if (mounted) {
+                            setState(() {
+                              _isSigningIn = false;
+                            });
 
-                                  if (user != null) {
-                                    setState(() {
-                                      _isLoginConfirmed = true;
-                                    });
+                            if (user != null) {
+                              setState(() {
+                                _isLoginConfirmed = true;
+                              });
 
-                                    await Future.delayed(const Duration(seconds: 3));
+                              await Future.delayed(const Duration(seconds: 3));
 
-                                    if (mounted) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(builder: (context) => const HomePage()),
-                                      );
-                                    }
-                                  }
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0E0E25), // Button color to match previous gradient color
+                              if (mounted) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const HomePage()),
+                                );
+                              }
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0E0E25), // Button color to match previous gradient color
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/google_logo.png',
+                                height: 24,
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'assets/google_logo.png',
-                                      height: 24,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Sign in with Google',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Sign in with Google',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                        ),
+                      ),
                     if (_isLoginConfirmed)
                       Column(
                         children: [
@@ -150,19 +159,42 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        scopes: [
+          'email',
+          'profile',
+        ],
+      ).signIn();
+
       if (googleUser == null) {
-        return null; // The user canceled the sign-in
+        print('Google Sign-In was canceled by the user');
+        return null;
       }
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+
+      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
+        print('Google authentication tokens are missing');
+        return null;
+      }
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken!,
+        idToken: googleAuth.idToken!,
       );
-      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final UserCredential userCredential =
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
       return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      print('Firebase Authentication Error: ${e.code} - ${e.message}');
+      return null;
+    } on PlatformException catch (e) {
+      print('Platform Exception during Google Sign-In: ${e.code} - ${e.message}');
+      return null;
     } catch (e) {
-      print(e);
+      print('Unexpected error during Google Sign-In: $e');
       return null;
     }
   }
