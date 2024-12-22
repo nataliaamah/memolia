@@ -720,119 +720,118 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                   ),
                 ..._filteredDiaries.map((diary) {
-                  bool isExpanded = diary['isExpanded'] ?? false;
+                  // Get the GIF path directly inline
+                  final emotionGif = _feelings.firstWhere(
+                        (item) => item['feeling'] == diary['feeling'],
+                    orElse: () => {'gif': ''}, // Default to empty if no match
+                  )['gif'] ?? '';
 
-                  return GestureDetector(
-                    onTap: () {
-                      if (!diary['locked']) {
-                        setState(() {
-                          diary['isExpanded'] = !isExpanded;
-                        });
-                      }
-                    },
-                    child: Card(
-                      color: const Color.fromRGBO(100, 110, 240, 1),
-                      margin: const EdgeInsets.all(10),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header Row (Date + Lock Icon)
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  formatDateTime(diary['createdAt']),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Colors.white70,
+                  return Card(
+                    color: const Color.fromRGBO(100, 110, 240, 1),
+                    margin: const EdgeInsets.all(10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Top Row: Date, Emotion, Lock
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    formatDateTime(diary['createdAt']),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.white70,
+                                    ),
                                   ),
-                                ),
-                                GestureDetector(
-                                  onTap: diary['locked']
-                                      ? () => _unlockDiary(diary) // Trigger unlock
-                                      : null, // No action if unlocked
-                                  child: Icon(
-                                    diary['locked'] ? Icons.lock : Icons.lock_open,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            // Image Section
-                            if (diary['imageBytes'] != null)
-                              GestureDetector(
-                                onTap: () {
-                                  if (!diary['locked']) {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return Dialog(
-                                          backgroundColor: Colors.transparent,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Image.memory(
-                                              diary['imageBytes'],
-                                              fit: BoxFit.contain,
-                                            ),
+                                  const SizedBox(height: 5),
+                                  if (emotionGif.isNotEmpty)
+                                    Row(
+                                      children: [
+                                        Image.asset(
+                                          emotionGif,
+                                          width: 30,
+                                          height: 30,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          diary['feeling'],
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
                                           ),
-                                        );
-                                      },
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: diary['locked'] ? () => _unlockDiary(diary) : null,
+                                child: Icon(
+                                  diary['locked'] ? Icons.lock : Icons.lock_open,
+                                  color: Colors.white.withOpacity(diary['locked'] ? 1.0 : 0.7), // 100% for locked, 70% for unlocked
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+
+                          // Image Section (Optional)
+                          if (diary['imageBytes'] != null)
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return Dialog(
+                                      backgroundColor: Colors.transparent,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.memory(
+                                          diary['imageBytes'],
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
                                     );
-                                  }
-                                },
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.memory(
-                                    diary['imageBytes'],
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: 150,
-                                  ),
+                                  },
+                                );
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.memory(
+                                  diary['imageBytes'],
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: 150,
                                 ),
                               ),
-
-                            const SizedBox(height: 10),
-
-                            // Description Section
-                            diary['locked']
-                                ? const Text(
-                              "This diary is locked.",
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 16,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            )
-                                : AnimatedCrossFade(
-                              duration: const Duration(milliseconds: 300),
-                              firstChild: Text(
-                                diary['description'] ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              secondChild: Text(
-                                diary['description'] ?? '',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              crossFadeState: isExpanded
-                                  ? CrossFadeState.showSecond
-                                  : CrossFadeState.showFirst,
                             ),
-                          ],
-                        ),
+                          const SizedBox(height: 10),
+
+                          // Description Section
+                          AnimatedCrossFade(
+                            duration: const Duration(milliseconds: 300),
+                            firstChild: Text(
+                              diary['locked'] ? 'This entry is locked.' : diary['description'] ?? '',
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            secondChild: Text(
+                              diary['description'] ?? '',
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                            crossFadeState: diary['isExpanded'] ?? false
+                                ? CrossFadeState.showSecond
+                                : CrossFadeState.showFirst,
+                          ),
+                        ],
                       ),
                     ),
                   );
