@@ -84,8 +84,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       setState(() {
         _diaries = decodedDiaries.cast<Map<String, dynamic>>().map((diary) {
           diary['createdAt'] = DateTime.parse(diary['createdAt']);
+          diary['locked'] = diary['locked'] ?? true; // Default to true if null
           return diary;
         }).toList();
+
+        _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
         _filterDiaries('Today');
         _isLoading = false;
       });
@@ -115,27 +118,27 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   Future<void> _refreshDiaries() async {
     if (FirebaseAuth.instance.currentUser != null) {
-      print("Fetching diaries from Firebase...");
       final List<Map<String, dynamic>> firebaseDiaries = await FirebaseHelper.getDiaries();
 
       setState(() {
         _diaries = firebaseDiaries.map((diary) {
           diary['createdAt'] = DateTime.parse(diary['createdAt']);
+          diary['locked'] = diary['locked'] ?? true; // Default to true if null
           if (diary.containsKey('imageBase64') && diary['imageBase64'] != null) {
             diary['imageBytes'] = base64Decode(diary['imageBase64']);
           }
           return diary;
         }).toList();
 
-        print("Diaries fetched from Firebase: $_diaries"); // Debug log
+        _diaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
         _filterDiaries(_filterOption);
         _isLoading = false;
       });
     } else {
-      print("Fetching local diaries...");
       await _loadLocalDiaries();
     }
   }
+
 
   void _filterDiaries(String option) {
     setState(() {
@@ -162,14 +165,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               diaryDate.month == _selectedDate!.month &&
               diaryDate.year == _selectedDate!.year;
         }).toList();
-
-        // Debug log to check the filtering process
-        print("Filtered diaries for Select Date ($_selectedDate): $_filteredDiaries");
       } else {
-        _filteredDiaries = _diaries;
+        _filteredDiaries = List.from(_diaries);
       }
+
+      // Sort filtered diaries by creation date in descending order
+      _filteredDiaries.sort((a, b) => b['createdAt'].compareTo(a['createdAt']));
     });
   }
+
 
   void _showLocalStorageNotification() {
     showDialog(
@@ -200,13 +204,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _saveLocalDiaries(
       Map<String, dynamic>? existingDiary,
       String description,
-      String? emotion, // Allow null values for emotion
-      bool isLocked,
-      File? image
-      ) async {
+      String? emotion,
+      bool isLocked, // Use the selected locked state
+      File? image) async {
     final now = DateTime.now();
     String? imagePath;
 
+    // Save the image to local storage
     if (image != null) {
       final appDir = await getApplicationDocumentsDirectory();
       final fileName = '${now.millisecondsSinceEpoch}_diary_image.jpg';
@@ -214,38 +218,34 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       await image.copy(imagePath);
     }
 
+    // Create a diary entry
     final diary = {
       'id': existingDiary?['id'] ?? now.toString(),
       'feeling': emotion ?? '', // Default to an empty string if null
       'description': description,
       'createdAt': now.toIso8601String(),
-      'locked': isLocked,
+      'locked': isLocked, // Use the provided locked state
       'imagePath': imagePath,
     };
 
-    print("Saving diary: $diary"); // Debug log
-
+    // Load existing local diaries
     final prefs = await SharedPreferences.getInstance();
     List<Map<String, dynamic>> localDiaries = [];
-
     final String? localDiariesString = prefs.getString('localDiaries');
     if (localDiariesString != null) {
       localDiaries = (jsonDecode(localDiariesString) as List<dynamic>)
           .cast<Map<String, dynamic>>();
     }
 
+    // Update or add the diary
     if (existingDiary != null) {
       localDiaries.removeWhere((d) => d['id'] == existingDiary['id']);
     }
-
     localDiaries.add(diary);
 
+    // Save updated list back to local storage
     await prefs.setString('localDiaries', jsonEncode(localDiaries));
-
-    print("Updated local diaries: $localDiaries"); // Debug log
   }
-
-
 
 
   void _selectDate() async {
@@ -269,27 +269,20 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       String description,
       String emotion,
       bool isLocked,
-      File? image
-      ) async {
+      File? image) async {
     final now = DateTime.now();
     String? imageBase64;
 
     if (image != null) {
       try {
-        // Compress and resize the image
         final compressedImage = await FlutterImageCompress.compressWithFile(
           image.absolute.path,
-          quality: 50, // Compression quality
-          minWidth: 800, // Adjust width
-          minHeight: 800, // Adjust height
+          quality: 50,
+          minWidth: 800,
+          minHeight: 800,
         );
-
         if (compressedImage != null) {
-          // Convert the compressed image to base64
           imageBase64 = base64Encode(compressedImage);
-          print('Image compressed and converted to base64 successfully.');
-        } else {
-          print('Image compression failed.');
         }
       } catch (e) {
         print('Error compressing image: $e');
@@ -297,40 +290,36 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
 
     if (FirebaseAuth.instance.currentUser != null) {
-      print('Saving to Firebase...');
       if (existingDiary == null) {
         await FirebaseHelper.createDiary(
           emotion,
           description,
-          isLocked,
+          isLocked, // Use the selected locked state
           imageBase64,
         );
-        print('Created diary on Firebase: $description');
       } else {
         await FirebaseHelper.updateDiary(
           existingDiary['id'],
           emotion,
           description,
-          isLocked,
+          isLocked, // Use the selected locked state
           imageBase64,
         );
-        print('Updated diary on Firebase: $description');
       }
     } else {
-      print('Saving locally via _saveLocalDiaries...');
       await _saveLocalDiaries(
         existingDiary,
         description,
         emotion,
-        isLocked,
+        isLocked, // Use the selected locked state
         image,
       );
-      print('Saved diary locally: $description');
     }
 
     await _refreshDiaries();
     Navigator.pop(context);
   }
+
 
   String formatDateTime(DateTime dateTime) {
     final DateFormat formatter = DateFormat('EEE, dd MMM yy, HH:mm');
@@ -731,61 +720,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                   ),
                 ..._filteredDiaries.map((diary) {
-                  return Dismissible(
-                    key: Key(diary['id']),
-                    background: Container(
-                      color: Colors.blue,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: const Icon(Icons.edit, color: Colors.white),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        _showAddEditModal(existingDiary: diary);
-                        return false;
-                      } else if (direction == DismissDirection.endToStart) {
-                        final bool res = await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text("Confirm"),
-                              content: const Text("Are you sure you wish to delete this entry?"),
-                              actions: <Widget>[
-                                ElevatedButton(
-                                  onPressed: () => Navigator.of(context).pop(true),
-                                  child: const Text("DELETE"),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
-                                  child: const Text("CANCEL"),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        return res;
-                      }
-                      return false;
-                    },
-                    onDismissed: (direction) {
-                      if (direction == DismissDirection.endToStart) {
-                        _diaries.removeWhere((d) => d['id'] == diary['id']);
-                        if (user == null) {
-                          _saveLocalDiaries(
-                            diary,
-                            diary['description'],
-                            null, // Emotion is now optional
-                            diary['locked'] ?? false,
-                            null, // No image
-                          );
-                        }
-                        _refreshDiaries();
+                  bool isExpanded = diary['isExpanded'] ?? false;
+
+                  return GestureDetector(
+                    onTap: () {
+                      if (!diary['locked']) {
+                        setState(() {
+                          diary['isExpanded'] = !isExpanded;
+                        });
                       }
                     },
                     child: Card(
@@ -796,6 +738,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Header Row (Date + Lock Icon)
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -807,32 +750,41 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                     color: Colors.white70,
                                   ),
                                 ),
-                                if (diary['locked'] == true)
-                                  GestureDetector(
-                                    onTap: () => _unlockDiary(diary),
-                                    child: const Icon(Icons.lock, color: Colors.white),
+                                GestureDetector(
+                                  onTap: diary['locked']
+                                      ? () => _unlockDiary(diary) // Trigger unlock
+                                      : null, // No action if unlocked
+                                  child: Icon(
+                                    diary['locked'] ? Icons.lock : Icons.lock_open,
+                                    color: Colors.white,
                                   ),
+                                ),
                               ],
                             ),
+
                             const SizedBox(height: 10),
+
+                            // Image Section
                             if (diary['imageBytes'] != null)
                               GestureDetector(
                                 onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return Dialog(
-                                        backgroundColor: Colors.transparent,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.memory(
-                                            diary['imageBytes'],
-                                            fit: BoxFit.contain,
+                                  if (!diary['locked']) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return Dialog(
+                                          backgroundColor: Colors.transparent,
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.memory(
+                                              diary['imageBytes'],
+                                              fit: BoxFit.contain,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  );
+                                        );
+                                      },
+                                    );
+                                  }
                                 },
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
@@ -844,15 +796,40 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
+
                             const SizedBox(height: 10),
-                            Text(
-                              diary['description'] ?? '',
-                              style: const TextStyle(
-                                color: Colors.white,
+
+                            // Description Section
+                            diary['locked']
+                                ? const Text(
+                              "This diary is locked.",
+                              style: TextStyle(
+                                color: Colors.white54,
                                 fontSize: 16,
+                                fontStyle: FontStyle.italic,
                               ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
+                            )
+                                : AnimatedCrossFade(
+                              duration: const Duration(milliseconds: 300),
+                              firstChild: Text(
+                                diary['description'] ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              secondChild: Text(
+                                diary['description'] ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              crossFadeState: isExpanded
+                                  ? CrossFadeState.showSecond
+                                  : CrossFadeState.showFirst,
                             ),
                           ],
                         ),
@@ -900,7 +877,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-// The biometric unlock function (you can replace this with the actual biometric logic)
+
   void _unlockDiary(Map<String, dynamic> diary) async {
     bool canAuthenticate = await _canAuthenticate();
 
@@ -909,36 +886,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
       if (authenticated) {
         setState(() {
-          diary['locked'] = false; // Unlock locally
+          diary['locked'] = false; // Unlock locally for the session
         });
-
-        // Update in Firebase or local storage
-        if (FirebaseAuth.instance.currentUser != null) {
-          // Update the locked status in Firebase
-          await FirebaseHelper.updateDiary(
-            diary['id'],
-            diary['feeling'] ?? '',
-            diary['description'] ?? '',
-            false, // Update locked to false
-            diary['imageBase64'], // Keep the image data if applicable
-          );
-        } else {
-          // Update locally if not logged in
-          await _saveLocalDiaries(
-            diary,
-            diary['description'] ?? '',
-            diary['feeling'] ?? '',
-            false, // Update locked to false
-            null,
-          );
-        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Diary unlocked successfully!')),
         );
-
-        // Refresh to reflect changes
-        await _refreshDiaries();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Authentication failed. Please try again.')),
@@ -946,6 +899,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
     }
   }
+
 
   Future<bool> _canAuthenticate() async {
     final bool canAuthenticate = await auth.canCheckBiometrics;
