@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'homepage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -159,22 +159,19 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn(
-        scopes: [
-          'email',
-          'profile',
-        ],
-      ).signIn();
+      print('Starting Google Sign-In...');
+      FirebaseAuth.instance.setLanguageCode('en'); // Set locale
 
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        print('Google Sign-In was canceled by the user');
+        print('Google Sign-In canceled.');
         return null;
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
-        print('Google authentication tokens are missing');
+        print('Missing authentication tokens.');
         return null;
       }
 
@@ -186,15 +183,12 @@ class _LoginPageState extends State<LoginPage> {
       final UserCredential userCredential =
       await FirebaseAuth.instance.signInWithCredential(credential);
 
+      FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+
+      print('Sign-In successful for user: ${userCredential.user?.uid}');
       return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      print('Firebase Authentication Error: ${e.code} - ${e.message}');
-      return null;
-    } on PlatformException catch (e) {
-      print('Platform Exception during Google Sign-In: ${e.code} - ${e.message}');
-      return null;
     } catch (e) {
-      print('Unexpected error during Google Sign-In: $e');
+      print('Error during Google Sign-In: $e');
       return null;
     }
   }
